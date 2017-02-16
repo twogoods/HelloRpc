@@ -9,5 +9,5 @@ package com.tg.rpc.core.Serializer;
  */
 public interface Serializer{
     public byte[] serialize(Object obj);
-    public <T> T deserialize(byte[] bytes);
+    public <T> T deserialize(byte[] bytes,Class<T> clazz);
 }
