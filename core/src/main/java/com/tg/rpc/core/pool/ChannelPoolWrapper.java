@@ -1,5 +1,6 @@
 package com.tg.rpc.core.pool;
 
+import com.tg.rpc.core.bootstrap.Client;
 import io.netty.channel.Channel;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -10,9 +11,6 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
  */
 public class ChannelPoolWrapper {
 
-    private String host;
-    private int port;
-
     private int maxTotal = 3;
     private int maxIdle = 3;
     private int minIdle = 0;
@@ -20,14 +18,12 @@ public class ChannelPoolWrapper {
 
     private GenericObjectPool<Channel> pool;
 
-    public ChannelPoolWrapper(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public ChannelPoolWrapper(Client client) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         config.setMaxTotal(maxTotal);
         config.setMaxIdle(maxIdle);
         config.setMinIdle(minIdle);
-        pool = new GenericObjectPool<Channel>(new ChannelConnectionFactory(host, port), config);
+        pool = new GenericObjectPool<Channel>(new ChannelConnectionFactory(client), config);
     }
 
     public void close() {

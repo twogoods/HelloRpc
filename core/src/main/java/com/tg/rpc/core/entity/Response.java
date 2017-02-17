@@ -1,4 +1,4 @@
-package com.tg.rpc.core.transport;
+package com.tg.rpc.core.entity;
 
 /**
  * Description:
@@ -9,7 +9,8 @@ package com.tg.rpc.core.transport;
  */
 public class Response {
     private long requestId;
-    private Object response;
+    private int code;
+    private Object returnObj;
 
     public long getRequestId() {
         return requestId;
@@ -19,19 +20,28 @@ public class Response {
         this.requestId = requestId;
     }
 
-    public Object getResponse() {
-        return response;
+    public int getCode() {
+        return code;
     }
 
-    public void setResponse(Object response) {
-        this.response = response;
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public Object getReturnObj() {
+        return returnObj;
+    }
+
+    public void setReturnObj(Object returnObj) {
+        this.returnObj = returnObj;
     }
 
     @Override
     public String toString() {
         return "Response{" +
                 "requestId=" + requestId +
-                ", response=" + response +
+                ", code=" + code +
+                ", returnObj=" + returnObj +
                 '}';
     }
 }

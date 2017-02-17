@@ -11,8 +11,6 @@ import java.util.Map;
  */
 public class SerializerTest {
 
-
-
     Serializer kry = new KryoSerializer();
     Serializer protostuff = new ProtostuffSerializer();
 
