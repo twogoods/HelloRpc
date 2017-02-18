@@ -1,6 +1,7 @@
 package com.tg.rpc.core.entity;
 
 import com.tg.rpc.core.exception.ValidateException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,7 @@ public class ServiceHolder {
     }
 
     public static Object get(Request request) {
-        if (request.getServiceName() != null) {
+        if (!StringUtils.isEmpty(request.getServiceName())) {
             return serviceMap.get(request.getServiceName());
         }
         return serviceMap.get(WordUtils.uncapitalize(request.getClazz().getSimpleName()));

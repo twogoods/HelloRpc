@@ -34,7 +34,12 @@ public class Client {
     private String host;
     private int port;
     private int maxCapacity;
-    private int requestTimeoutMillis = 10;
+    private int requestTimeoutMillis;
+
+    private int maxTotal;
+    private int maxIdle;
+    private int minIdle;
+    private int borrowMaxWaitMillis;
 
     private ChannelPoolWrapper channelPoolWrapper;
 
@@ -49,7 +54,13 @@ public class Client {
     public static class Builder {
         private String host;
         private int port;
-        private int maxCapacity;
+        private int maxCapacity = 8;
+        private int requestTimeoutMillis = 8000;
+
+        private int maxTotal = 8;
+        private int maxIdle = 8;
+        private int minIdle = 0;
+        private long borrowMaxWaitMillis = 8000;
 
         public Client.Builder host(String host) {
             if (StringUtils.isEmpty(host)) {
@@ -68,19 +79,46 @@ public class Client {
         }
 
         public Client.Builder maxCapacity(int maxCapacity) {
-            if (maxCapacity <= 0) {
-                throw new IllegalArgumentException("maxCapacity can't be negative");
-            }
             this.maxCapacity = maxCapacity;
+            return this;
+        }
+
+        public Client.Builder requestTimeoutMillis(int requestTimeoutMillis) {
+            this.requestTimeoutMillis = requestTimeoutMillis;
+            return this;
+        }
+
+        public Client.Builder connectionMaxTotal(int maxTotal) {
+            this.maxTotal = maxTotal;
+            return this;
+        }
+
+        public Client.Builder connectionMaxIdle(int maxIdle) {
+            this.maxIdle = maxIdle;
+            return this;
+        }
+
+        public Client.Builder connectionMinIdle(int minIdle) {
+            this.minIdle = minIdle;
+            return this;
+        }
+
+        public Client.Builder connectionBorrowMaxWaitMillis(int borrowMaxWaitMillis) {
+            this.borrowMaxWaitMillis = borrowMaxWaitMillis;
             return this;
         }
 
         public Client build() {
             Validate.notEmpty(host, "host can't be empty");
             Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
-            Validate.isTrue(maxCapacity > 0, "maxCapacity can't be negative, maxCapacity:%d", maxCapacity);
+            Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
+            Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
+            Validate.isTrue(maxTotal > 0, "maxTotal must bigger than zero, maxCapacity:%d", maxTotal);
+            Validate.isTrue(maxIdle > 0, "maxIdle must bigger than zero, maxCapacity:%d", maxIdle);
+            Validate.isTrue(minIdle >= 0, "minIdle can't be negative, maxCapacity:%d", minIdle);
+            Validate.isTrue(borrowMaxWaitMillis > 0, "borrowMaxWaitMillis must bigger than zero, maxCapacity:%d", borrowMaxWaitMillis);
             Client client = new Client(host, port, maxCapacity);
-            client.initChannelPool();
+            client.connection();
             return client;
         }
     }
@@ -90,7 +128,7 @@ public class Client {
             EventLoopGroup group = new NioEventLoopGroup();
             Bootstrap b = new Bootstrap();
             b.group(group).channel(NioSocketChannel.class)
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, borrowMaxWaitMillis)
                     .option(ChannelOption.TCP_NODELAY, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -101,7 +139,7 @@ public class Client {
                                     .addLast(new ClientChannelHandler());
                         }
                     });
-
+            log.info("client try to connection {}:{}", host, port);
             //TODO 复用问题 http://www.cnblogs.com/kaiblog/p/5372728.html
             ChannelFuture f = b.connect(host, port).sync();
 
@@ -125,7 +163,8 @@ public class Client {
         return null;
     }
 
-    public void initChannelPool() {
+    private void connection() {
+        log.info("connect...");
         channelPoolWrapper = new ChannelPoolWrapper(this);
     }
 
@@ -137,11 +176,51 @@ public class Client {
             channel.writeAndFlush(request);
             BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
             QueueHolder.put(request.getRequestId(), blockingQueue);
-            Response response = blockingQueue.poll(requestTimeoutMillis, TimeUnit.SECONDS);
+            Response response = blockingQueue.poll(requestTimeoutMillis, TimeUnit.MILLISECONDS);
             return response;
         } finally {
             channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());
         }
+    }
+
+    public int getRequestTimeoutMillis() {
+        return requestTimeoutMillis;
+    }
+
+    public void setRequestTimeoutMillis(int requestTimeoutMillis) {
+        this.requestTimeoutMillis = requestTimeoutMillis;
+    }
+
+    public int getMaxTotal() {
+        return maxTotal;
+    }
+
+    public void setMaxTotal(int maxTotal) {
+        this.maxTotal = maxTotal;
+    }
+
+    public int getMaxIdle() {
+        return maxIdle;
+    }
+
+    public void setMaxIdle(int maxIdle) {
+        this.maxIdle = maxIdle;
+    }
+
+    public int getMinIdle() {
+        return minIdle;
+    }
+
+    public void setMinIdle(int minIdle) {
+        this.minIdle = minIdle;
+    }
+
+    public int getBorrowMaxWaitMillis() {
+        return borrowMaxWaitMillis;
+    }
+
+    public void setBorrowMaxWaitMillis(int borrowMaxWaitMillis) {
+        this.borrowMaxWaitMillis = borrowMaxWaitMillis;
     }
 }

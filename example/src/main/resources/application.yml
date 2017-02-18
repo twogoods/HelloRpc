@@ -1,0 +1,9 @@
+tgrpc:
+    host: 127.0.0.1
+    port: 9100
+    maxCapacity: 3
+    requestTimeoutMillis: 8
+    maxTotal: 3
+    maxIdle: 3
+    minIdle: 0
+    borrowMaxWaitMillis: 5000

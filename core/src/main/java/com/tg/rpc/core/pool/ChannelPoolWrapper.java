@@ -11,18 +11,16 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
  */
 public class ChannelPoolWrapper {
 
-    private int maxTotal = 3;
-    private int maxIdle = 3;
-    private int minIdle = 0;
-    private long borrowMaxWaitMillis = 8000;
+    private long borrowMaxWaitMillis;
 
     private GenericObjectPool<Channel> pool;
 
     public ChannelPoolWrapper(Client client) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-        config.setMaxTotal(maxTotal);
-        config.setMaxIdle(maxIdle);
-        config.setMinIdle(minIdle);
+        config.setMaxTotal(client.getMaxTotal());
+        config.setMaxIdle(client.getMaxIdle());
+        config.setMinIdle(client.getMinIdle());
+        this.borrowMaxWaitMillis = client.getBorrowMaxWaitMillis();
         pool = new GenericObjectPool<Channel>(new ChannelConnectionFactory(client), config);
     }
 
