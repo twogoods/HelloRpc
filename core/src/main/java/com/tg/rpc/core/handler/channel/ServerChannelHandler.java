@@ -12,8 +12,8 @@ import org.apache.logging.log4j.Logger;
  * Created by twogoods on 17/2/16.
  */
 public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
-    private static Logger log = LogManager.getLogger(ServerChannelHandler.class);
 
+    private static Logger log = LogManager.getLogger(ServerChannelHandler.class);
     private ResponseHandler responseHandler;
 
     public ServerChannelHandler(ResponseHandler responseHandler) {
@@ -22,14 +22,13 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
 
     @Override
     protected void messageReceived(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
-        log.info("get request {}",request);
         Response response = responseHandler.handle(request);
+        log.debug("server get request:{}, return response:{}", request, response);
         channelHandlerContext.pipeline().writeAndFlush(response);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        //TOOD
-//        ctx.channel().close();
+        log.error("{} in channel:{}", cause, ctx.channel());
     }
 }

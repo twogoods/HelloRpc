@@ -19,6 +19,9 @@ public class Request {
     private Object[] params;
     private long requestTime;
 
+    public Request() {
+    }
+
     public Request(Class<?> clazz, String method, Class<?>[] parameterTypes, Object[] params, String serviceName) {
         this.clazz = clazz;
         this.method = method;

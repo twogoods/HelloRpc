@@ -95,26 +95,27 @@ public class Client {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new ProtocolDecoder(10 * 1024 * 1024))
+                            ch.pipeline().addLast(new ProtocolDecoder(maxCapacity * 1024 * 1024))
                                     .addLast(new ProtocolEncoder())
-//                                    .addLast(new LoggingHandler(LogLevel.INFO))
+                                    .addLast(new LoggingHandler(LogLevel.DEBUG))
                                     .addLast(new ClientChannelHandler());
                         }
                     });
 
             //TODO 复用问题 http://www.cnblogs.com/kaiblog/p/5372728.html
             ChannelFuture f = b.connect(host, port).sync();
+
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
-                        log.info("Connect to {}:{} Connect success!", host, port);
+                        log.info("Connect to {}:{} Connect success! channel:{}", host, port, future.channel());
                     }
                 }
             });
             final Channel channel = f.channel();
             channel.closeFuture().addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
-                    log.info("Channel Closed {}:{} ", host, port);
+                    log.info("Channel Closed ", future.channel());
                 }
             });
             return channel;
@@ -131,14 +132,15 @@ public class Client {
     public Response sendRequest(Method method, Object[] args, Class clazz, String serviceName) throws Exception {
         Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args, serviceName);
         request.setRequestId(atomicLong.incrementAndGet());
+        Channel channel = channelPoolWrapper.getObject();
         try {
-            Channel channel = channelPoolWrapper.getObject();
             channel.writeAndFlush(request);
             BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
             QueueHolder.put(request.getRequestId(), blockingQueue);
             Response response = blockingQueue.poll(requestTimeoutMillis, TimeUnit.SECONDS);
             return response;
         } finally {
+            channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());
         }
     }

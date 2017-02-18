@@ -24,6 +24,9 @@ public class RpcClientInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(Method method, Object[] args, Class clazz, String serviceName) throws Throwable {
         Response response = client.sendRequest(method, args, clazz,serviceName);
+        if(response==null){
+            throw new ServiceInvokeException("server didn't return response");
+        }
         if(response.getCode()== ResponseCodeConstant.SERVICE_NOT_FIND){
             throw new ServiceInvokeException("server can not find ServiceImpl, please check you implements service");
         }else if(response.getCode()== ResponseCodeConstant.INTERNAL_ERROR){

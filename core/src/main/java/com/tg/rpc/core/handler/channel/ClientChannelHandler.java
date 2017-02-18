@@ -18,7 +18,6 @@ public class ClientChannelHandler extends SimpleChannelInboundHandler<Response> 
 
     @Override
     protected void messageReceived(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
-        log.info("get response {}",response);
         BlockingQueue<Response> blockingQueue = QueueHolder.get(response.getRequestId());
         if (blockingQueue != null) {
             blockingQueue.put(response);
@@ -26,7 +25,6 @@ public class ClientChannelHandler extends SimpleChannelInboundHandler<Response> 
     }
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        //TOOD
-        ctx.channel().close();
+        log.error("error in channel:{} {}",ctx.channel(),cause);
     }
 }
