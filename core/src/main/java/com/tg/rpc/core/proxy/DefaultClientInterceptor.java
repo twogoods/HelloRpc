@@ -10,14 +10,14 @@ import java.lang.reflect.Method;
 /**
  * Created by twogoods on 17/2/17.
  */
-public class RpcClientInterceptor implements MethodInterceptor {
+public class DefaultClientInterceptor implements MethodInterceptor {
 
     private Client client;
 
-    public RpcClientInterceptor() {
+    public DefaultClientInterceptor() {
     }
 
-    public RpcClientInterceptor(Client client) {
+    public DefaultClientInterceptor(Client client) {
         this.client = client;
     }
 

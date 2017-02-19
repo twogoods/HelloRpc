@@ -16,7 +16,8 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @EnableAutoConfiguration
-@ComponentScan(value = {"com.tg.rpc.springsupport"})
+@ComponentScan(value = {"com.tg.rpc.springsupport.bean.server","com.tg.rpc.springsupport.config",
+        "com.tg.rpc.example.springsupport.service"})
 public class ServerApplication {
 
     @Bean

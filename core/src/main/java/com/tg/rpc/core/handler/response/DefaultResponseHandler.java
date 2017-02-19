@@ -12,9 +12,9 @@ import java.lang.reflect.Method;
 /**
  * Created by twogoods on 17/2/17.
  */
-public class SimpleResponseHandler implements ResponseHandler {
+public class DefaultResponseHandler implements ResponseHandler {
 
-    private static Logger log = LogManager.getLogger(SimpleResponseHandler.class);
+    private static Logger log = LogManager.getLogger(DefaultResponseHandler.class);
 
     @Override
     public Response handle(Request request) {

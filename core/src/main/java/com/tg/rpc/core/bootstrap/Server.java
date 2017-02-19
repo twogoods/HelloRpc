@@ -6,7 +6,7 @@ import com.tg.rpc.core.entity.ServiceHolder;
 import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.handler.channel.ServerChannelHandler;
 import com.tg.rpc.core.handler.response.ResponseHandler;
-import com.tg.rpc.core.handler.response.SimpleResponseHandler;
+import com.tg.rpc.core.handler.response.DefaultResponseHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -41,7 +41,7 @@ public class Server {
     public static class Builder {
         private int port;
         private int maxCapacity;
-        private ResponseHandler responseHandler = new SimpleResponseHandler();
+        private ResponseHandler responseHandler = new DefaultResponseHandler();
 
         public Server.Builder port(int port) {
             this.port = port;

@@ -60,7 +60,7 @@ public class Client {
         private int maxTotal = 8;
         private int maxIdle = 8;
         private int minIdle = 0;
-        private long borrowMaxWaitMillis = 8000;
+        private int borrowMaxWaitMillis = 8000;
 
         public Client.Builder host(String host) {
             if (StringUtils.isEmpty(host)) {
@@ -118,6 +118,11 @@ public class Client {
             Validate.isTrue(minIdle >= 0, "minIdle can't be negative, maxCapacity:%d", minIdle);
             Validate.isTrue(borrowMaxWaitMillis > 0, "borrowMaxWaitMillis must bigger than zero, maxCapacity:%d", borrowMaxWaitMillis);
             Client client = new Client(host, port, maxCapacity);
+            client.requestTimeoutMillis=this.requestTimeoutMillis;
+            client.maxTotal=this.maxTotal;
+            client.maxIdle=this.maxIdle;
+            client.minIdle=this.minIdle;
+            client.borrowMaxWaitMillis=this.borrowMaxWaitMillis;
             client.connection();
             return client;
         }
@@ -172,6 +177,9 @@ public class Client {
         Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args, serviceName);
         request.setRequestId(atomicLong.incrementAndGet());
         Channel channel = channelPoolWrapper.getObject();
+        if(channel==null){
+            Validate.notNull(channel, "can't get channel from pool");
+        }
         try {
             channel.writeAndFlush(request);
             BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);

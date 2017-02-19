@@ -29,6 +29,7 @@ public class SpringBeanResponseHandler implements ResponseHandler {
         if (!StringUtils.isEmpty(serviceName)) {
             serviceImpl = springContextHolder.getBean(serviceName);
         } else {
+            //TODO 没有servicename时,通过接口使用类似Spring bytype 的形式拿到bean;
             serviceImpl = springContextHolder.getBean(serviceName);
         }
         Response response = new Response();

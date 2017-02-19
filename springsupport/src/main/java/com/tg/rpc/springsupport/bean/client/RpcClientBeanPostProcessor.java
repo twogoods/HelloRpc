@@ -1,17 +1,10 @@
 package com.tg.rpc.springsupport.bean.client;
 
-import com.tg.rpc.core.bootstrap.Client;
-import com.tg.rpc.core.proxy.CglibClientProxy;
 import com.tg.rpc.core.proxy.ClientProxy;
-import com.tg.rpc.core.proxy.MethodInterceptor;
-import com.tg.rpc.core.proxy.RpcClientInterceptor;
 import com.tg.rpc.springsupport.annotation.RpcReferer;
-import com.tg.rpc.springsupport.config.RpcConfig;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanInitializationException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
@@ -27,6 +20,13 @@ import java.lang.reflect.Field;
 public class RpcClientBeanPostProcessor implements BeanPostProcessor {
 
     private ClientProxy clientProxy;
+
+    public RpcClientBeanPostProcessor() {
+    }
+
+    public RpcClientBeanPostProcessor(ClientProxy clientProxy) {
+        this.clientProxy = clientProxy;
+    }
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -55,27 +55,4 @@ public class RpcClientBeanPostProcessor implements BeanPostProcessor {
     public Object postProcessAfterInitialization(Object o, String s) throws BeansException {
         return o;
     }
-
-    @Bean("defaultClient")
-    public Client client(@Qualifier("rpcConfig") RpcConfig rpcConfig) {
-        return new Client.Builder().host(rpcConfig.getHost())
-                .port(rpcConfig.getPort())
-                .maxCapacity(rpcConfig.getMaxCapacity())
-                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                .connectionMaxTotal(rpcConfig.getMaxTotal())
-                .connectionMaxIdle(rpcConfig.getMaxIdle())
-                .connectionMinIdle(rpcConfig.getMinIdle())
-                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
-                .build();
-    }
-    @Bean("defaultRpcClientInterceptor")
-    public MethodInterceptor rpcClientInterceptor(@Qualifier("defaultClient") Client client){
-        return new RpcClientInterceptor();
-    }
-
-    @Bean("cglibClientProxy")
-    public ClientProxy cglibClientProxy(@Qualifier("defaultRpcClientInterceptor")MethodInterceptor rpcClientInterceptor){
-        return new CglibClientProxy(rpcClientInterceptor);
-    }
-
 }

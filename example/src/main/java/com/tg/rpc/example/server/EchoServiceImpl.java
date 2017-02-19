@@ -9,5 +9,4 @@ public class EchoServiceImpl implements EchoService {
     public String hello(String s) {
         return s;
     }
-
 }
