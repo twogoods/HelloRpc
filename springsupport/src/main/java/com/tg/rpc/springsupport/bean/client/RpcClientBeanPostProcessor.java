@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 
 /**
  * Description:
- *
+ *   为service接口对象提供代理实现
  * @author twogoods
  * @version 0.1
  * @since 2017-02-01
@@ -34,7 +34,6 @@ public class RpcClientBeanPostProcessor implements BeanPostProcessor {
         Field[] fields = clazz.getDeclaredFields();
         for (Field f : fields) {
             try {
-                //服务引用注解,若有自动发起client连接
                 RpcReferer rpcReferer = f.getAnnotation(RpcReferer.class);
                 if (rpcReferer != null) {
                     if (!f.isAccessible()) {

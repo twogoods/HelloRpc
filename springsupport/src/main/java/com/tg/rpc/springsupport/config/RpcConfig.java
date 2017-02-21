@@ -6,9 +6,10 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Created by twogoods on 17/2/18.
  */
-@Configuration(value = "rpcConfig")
-@ConfigurationProperties(prefix = "tgrpc")
+@ConfigurationProperties(prefix = RpcConfig.TGRPC_PREFIX)
 public class RpcConfig {
+
+    public static final String TGRPC_PREFIX = "tgrpc";
 
     private String host = "127.0.0.1";
     private int port = 9100;
