@@ -13,7 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EnableAutoConfiguration
 @EnableRpcServer
-@ComponentScan(value = {"com.tg.rpc.example.springsupport.service"})
+@ComponentScan(value = {"com.tg.rpc.example.service"})
 public class ServerApplication {
 
     public static void main(String[] args) {

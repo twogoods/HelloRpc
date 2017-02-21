@@ -25,7 +25,7 @@ public class DefaultClientInterceptor implements MethodInterceptor {
     public Object invoke(Method method, Object[] args, Class clazz, String serviceName) throws Throwable {
         Response response = client.sendRequest(method, args, clazz,serviceName);
         if(response==null){
-            throw new ServiceInvokeException("server didn't return response");
+            throw new ServiceInvokeException("response timout!!! server return nothing");
         }
         if(response.getCode()== ResponseCodeConstant.SERVICE_NOT_FIND){
             throw new ServiceInvokeException("server can not find ServiceImpl, please check you implements service");

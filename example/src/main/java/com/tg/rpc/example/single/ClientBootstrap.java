@@ -5,8 +5,8 @@ import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.proxy.ClientProxy;
 import com.tg.rpc.core.proxy.DefaultClientInterceptor;
 import com.tg.rpc.core.proxy.JdkClientProxy;
-import com.tg.rpc.example.server.EchoService;
-import com.tg.rpc.example.server.TestService;
+import com.tg.rpc.example.service.EchoService;
+import com.tg.rpc.example.service.TestService;
 
 /**
  * Created by twogoods on 17/2/17.
@@ -18,7 +18,7 @@ public class ClientBootstrap {
         ClientProxy clientProxy = new JdkClientProxy(interceptor);
 
         EchoService echoService = clientProxy.getProxy(EchoService.class);
-        System.out.println(echoService.hello("twogoods"));
+        System.out.println(echoService.echo("twogoods"));
 
         TestService testService = clientProxy.getProxy(TestService.class);
         System.out.println(testService.add(2, 5));

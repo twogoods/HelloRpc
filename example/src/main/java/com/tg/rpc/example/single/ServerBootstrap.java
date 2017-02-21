@@ -2,11 +2,10 @@ package com.tg.rpc.example.single;
 
 import com.tg.rpc.core.bootstrap.Server;
 import com.tg.rpc.core.exception.ValidateException;
-import com.tg.rpc.core.handler.response.ResponseHandler;
-import com.tg.rpc.example.server.EchoService;
-import com.tg.rpc.example.server.EchoServiceImpl;
-import com.tg.rpc.example.server.TestService;
-import com.tg.rpc.example.server.TestServiceImpl;
+import com.tg.rpc.example.service.EchoService;
+import com.tg.rpc.example.service.EchoServiceImpl;
+import com.tg.rpc.example.service.TestService;
+import com.tg.rpc.example.service.TestServiceImpl;
 
 /**
  * Created by twogoods on 17/2/17.

@@ -1,6 +1,7 @@
 package com.tg.rpc.example.springsupport.client;
 
-import com.tg.rpc.example.springsupport.service.Service;
+import com.tg.rpc.example.service.EchoService;
+import com.tg.rpc.example.service.TestService;
 import com.tg.rpc.springsupport.annotation.RpcReferer;
 import org.springframework.stereotype.Component;
 
@@ -9,10 +10,19 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ServiceCall {
-    @RpcReferer(name = "serviceImpl")
-    private Service service;
 
-    public String call(){
-        return service.test();
+    @RpcReferer
+    private EchoService echoService;
+
+    @RpcReferer
+    private TestService testService;
+
+
+    public String echo(String s) {
+        return echoService.echo(s);
+    }
+
+    public int add(int a, int b) {
+        return testService.add(a, b);
     }
 }

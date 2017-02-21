@@ -17,7 +17,8 @@ import java.lang.reflect.Method;
 
 /**
  * Description:
- *   server端请求处理
+ * server端请求处理
+ *
  * @author twogoods
  * @version 0.1
  * @since 2017-02-18
@@ -32,17 +33,17 @@ public class SpringBeanResponseHandler implements ResponseHandler, BeanFactoryAw
     @Override
     public Response handle(Request request) {
         String serviceName = request.getServiceName();
-        Object serviceImpl;
-        if (!StringUtils.isEmpty(serviceName)) {
-            serviceImpl = beanFactory.getBean(serviceName);
+        Object serviceImplObj;
+        //TODO serviceName没起到作用
+        if (StringUtils.isEmpty(serviceName)) {
+            serviceImplObj = beanFactory.getBean(request.getClazz());
         } else {
-            //TODO 没有servicename时,通过接口使用类似Spring bytype 的形式拿到bean;
-            serviceImpl = beanFactory.getBean(serviceName);
+            serviceImplObj = beanFactory.getBean(serviceName);
         }
         Response response = new Response();
         try {
-            Method method = serviceImpl.getClass().getMethod(request.getMethod(), request.getParameterTypes());
-            Object ret = method.invoke(serviceImpl, request.getParams());
+            Method method = serviceImplObj.getClass().getMethod(request.getMethod(), request.getParameterTypes());
+            Object ret = method.invoke(serviceImplObj, request.getParams());
             response.setRequestId(request.getRequestId());
             response.setReturnObj(ret);
             response.setCode(ResponseCodeConstant.SUCCESS);
