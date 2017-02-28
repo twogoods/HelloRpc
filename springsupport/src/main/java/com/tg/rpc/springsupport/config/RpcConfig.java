@@ -1,7 +1,6 @@
 package com.tg.rpc.springsupport.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Created by twogoods on 17/2/18.

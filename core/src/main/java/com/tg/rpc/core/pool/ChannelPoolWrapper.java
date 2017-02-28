@@ -11,17 +11,22 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
  */
 public class ChannelPoolWrapper {
 
+    private String host;
+    private int port;
     private long borrowMaxWaitMillis;
+
 
     private GenericObjectPool<Channel> pool;
 
-    public ChannelPoolWrapper(Client client) {
+    public ChannelPoolWrapper(Client client, String host, int port) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         config.setMaxTotal(client.getMaxTotal());
         config.setMaxIdle(client.getMaxIdle());
         config.setMinIdle(client.getMinIdle());
         this.borrowMaxWaitMillis = client.getBorrowMaxWaitMillis();
-        pool = new GenericObjectPool<Channel>(new ChannelConnectionFactory(client), config);
+        this.host = host;
+        this.port = port;
+        pool = new GenericObjectPool<Channel>(new ChannelConnectionFactory(client, host, port), config);
     }
 
     public void close() {
@@ -34,5 +39,21 @@ public class ChannelPoolWrapper {
 
     public void returnObject(Channel channel) {
         pool.returnObject(channel);
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }

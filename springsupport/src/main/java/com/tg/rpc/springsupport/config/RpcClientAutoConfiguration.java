@@ -1,9 +1,9 @@
 package com.tg.rpc.springsupport.config;
 
-import com.tg.rpc.core.bootstrap.Client;
-import com.tg.rpc.core.proxy.CglibClientProxy;
 import com.tg.rpc.core.proxy.ClientProxy;
 import com.tg.rpc.core.proxy.DefaultClientInterceptor;
+import com.tg.rpc.core.bootstrap.Client;
+import com.tg.rpc.core.proxy.CglibClientProxy;
 import com.tg.rpc.core.proxy.MethodInterceptor;
 import com.tg.rpc.springsupport.bean.client.RpcClientBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;

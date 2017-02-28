@@ -2,10 +2,10 @@ package com.tg.rpc.example.single;
 
 import com.tg.rpc.core.bootstrap.Server;
 import com.tg.rpc.core.exception.ValidateException;
-import com.tg.rpc.example.service.EchoService;
 import com.tg.rpc.example.service.EchoServiceImpl;
 import com.tg.rpc.example.service.TestService;
 import com.tg.rpc.example.service.TestServiceImpl;
+import com.tg.rpc.example.service.EchoService;
 
 /**
  * Created by twogoods on 17/2/17.

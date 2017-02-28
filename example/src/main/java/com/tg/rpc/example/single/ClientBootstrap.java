@@ -1,12 +1,12 @@
 package com.tg.rpc.example.single;
 
+import com.tg.rpc.core.proxy.DefaultClientInterceptor;
+import com.tg.rpc.example.service.TestService;
 import com.tg.rpc.core.bootstrap.Client;
 
 import com.tg.rpc.core.proxy.ClientProxy;
-import com.tg.rpc.core.proxy.DefaultClientInterceptor;
 import com.tg.rpc.core.proxy.JdkClientProxy;
 import com.tg.rpc.example.service.EchoService;
-import com.tg.rpc.example.service.TestService;
 
 /**
  * Created by twogoods on 17/2/17.

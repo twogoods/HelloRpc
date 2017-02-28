@@ -1,8 +1,8 @@
 package com.tg.rpc.springsupport.bean.server;
 
-import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.entity.ResponseCodeConstant;
+import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.response.ResponseHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;

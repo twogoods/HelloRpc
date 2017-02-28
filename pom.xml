@@ -12,6 +12,7 @@
         <module>core</module>
         <module>springsupport</module>
         <module>example</module>
+        <module>consul</module>
     </modules>
 
     <properties>

@@ -1,7 +1,6 @@
 # HelloRPC
 算是自己**从零编写一个RPC**的一个实践.实践下来,完成一个helloworld级别的其实并不难,有这么几个部分:通信包括连接建立消息传输,
 编解码要传输的内容,序列化和反序列化,最后是客户端和服务端的实现,客户调用一个服务的代理实现,发起对服务端的请求.
-
 使用现有的一些类库可以快速的完成一个RPC框架,如`netty5.0`完成tcp传输,`protostuff`、`kryo`提供高效的序列化,
 `commons-pool2`也让我们实现连接池变得非常简单,至于服务的代理我们可以用jdk自身的`Proxy`或`Cglib`来完成.
 
@@ -40,7 +39,7 @@ Client：
  System.out.println(echoService.echo("twogoods"));
 ```
 ---
-### 整合Spring
+### 整合SpringBoot
 #### 服务端配置
 使用`@RpcService`注解
 
@@ -78,7 +77,6 @@ tgrpc:
 @EnableRpcServer //启用Server
 @ComponentScan()
 public class ServerApplication {
-
     public static void main(String[] args) {
         ApplicationContext applicationContext = SpringApplication.run(ServerApplication.class);
     }
@@ -107,7 +105,6 @@ public class ServiceCall {
 @EnableRpcClient //启用Client
 @ComponentScan(basePackages = {"com.tg.rpc.springsupport.bean.client"})
 public class ClientApplication {
-
     public static void main(String[] args) {
         ApplicationContext applicationContext = SpringApplication.run(ClientApplication.class);
         ServiceCall serviceCall = (ServiceCall) applicationContext.getBean("serviceCall");

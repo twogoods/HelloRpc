@@ -3,10 +3,13 @@ package com.tg.rpc.core.bootstrap;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
 import com.tg.rpc.core.entity.QueueHolder;
-import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.entity.Response;
-import com.tg.rpc.core.handler.channel.ClientChannelHandler;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
+import com.tg.rpc.core.entity.Request;
+import com.tg.rpc.core.handler.channel.ClientChannelHandler;
+import com.tg.rpc.core.servicecenter.Service;
+import com.tg.rpc.core.servicecenter.ServiceChangeHandler;
+import com.tg.rpc.core.servicecenter.ServiceDiscovery;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -18,10 +21,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.CopyOnWrite;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,29 +39,36 @@ public class Client {
 
     private String host;
     private int port;
+    private ServiceDiscovery serviceDiscovery;
     private int maxCapacity;
     private int requestTimeoutMillis;
+    private String serverName;
 
     private int maxTotal;
     private int maxIdle;
     private int minIdle;
     private int borrowMaxWaitMillis;
 
-    private ChannelPoolWrapper channelPoolWrapper;
+    private CopyOnWriteArrayList<ChannelPoolWrapper> channelPoolWrappers = new CopyOnWriteArrayList();
 
     private AtomicLong atomicLong = new AtomicLong(100000);
 
-    public Client(String host, int port, int maxCapacity) {
+    public Client(String host, int port) {
         this.host = host;
         this.port = port;
-        this.maxCapacity = maxCapacity;
+    }
+
+    public Client(ServiceDiscovery serviceDiscovery) {
+        this.serviceDiscovery = serviceDiscovery;
     }
 
     public static class Builder {
         private String host;
         private int port;
+        private ServiceDiscovery serviceDiscovery;
         private int maxCapacity = 8;
         private int requestTimeoutMillis = 8000;
+        private String serverName = "default_rpc";
 
         private int maxTotal = 8;
         private int maxIdle = 8;
@@ -80,6 +93,11 @@ public class Client {
 
         public Client.Builder maxCapacity(int maxCapacity) {
             this.maxCapacity = maxCapacity;
+            return this;
+        }
+
+        public Client.Builder serverName(String serverName) {
+            this.serverName = serverName;
             return this;
         }
 
@@ -109,26 +127,34 @@ public class Client {
         }
 
         public Client build() {
-            Validate.notEmpty(host, "host can't be empty");
-            Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
             Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
             Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
             Validate.isTrue(maxTotal > 0, "maxTotal must bigger than zero, maxCapacity:%d", maxTotal);
             Validate.isTrue(maxIdle > 0, "maxIdle must bigger than zero, maxCapacity:%d", maxIdle);
             Validate.isTrue(minIdle >= 0, "minIdle can't be negative, maxCapacity:%d", minIdle);
             Validate.isTrue(borrowMaxWaitMillis > 0, "borrowMaxWaitMillis must bigger than zero, maxCapacity:%d", borrowMaxWaitMillis);
-            Client client = new Client(host, port, maxCapacity);
-            client.requestTimeoutMillis=this.requestTimeoutMillis;
-            client.maxTotal=this.maxTotal;
-            client.maxIdle=this.maxIdle;
-            client.minIdle=this.minIdle;
-            client.borrowMaxWaitMillis=this.borrowMaxWaitMillis;
-            client.connection();
+
+            Client client;
+            if (StringUtils.isEmpty(host)) {
+                Validate.notNull(serviceDiscovery, "no host and port, so serviceDiscovery can't be null");
+                client = new Client(serviceDiscovery);
+            } else {
+                Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
+                client = new Client(host, port);
+            }
+            client.maxCapacity = maxCapacity;
+            client.requestTimeoutMillis = this.requestTimeoutMillis;
+            client.serverName = serverName;
+            client.maxTotal = this.maxTotal;
+            client.maxIdle = this.maxIdle;
+            client.minIdle = this.minIdle;
+            client.borrowMaxWaitMillis = this.borrowMaxWaitMillis;
+            client.init();
             return client;
         }
     }
 
-    public Channel initConnection() {
+    public Channel initConnection(String host, int port) {
         try {
             EventLoopGroup group = new NioEventLoopGroup();
             Bootstrap b = new Bootstrap();
@@ -168,16 +194,77 @@ public class Client {
         return null;
     }
 
-    private void connection() {
+    private void init() {
+        if (serviceDiscovery != null) {
+            List<Service> serviceList = serviceDiscovery.discover(serverName);
+            for (Service service : serviceList) {
+                addChannel(service.getAddress(), service.getPort());
+            }
+        } else {
+            addChannel(host, port);
+        }
+
+        serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
+            @Override
+            public void handle(List<Service> services) {
+
+                //去除
+                for (ChannelPoolWrapper channelPoolWrapper : channelPoolWrappers) {
+                    boolean channelcontain = false;
+                    for (Service service : services) {
+                        if (isServerSame(channelPoolWrapper, service)) {
+                            channelcontain = true;
+                            break;
+                        }
+                    }
+                    if(!channelcontain){
+                        channelPoolWrappers.remove(channelPoolWrapper);
+                    }
+                }
+
+                //增加新的
+                for (Service service : services) {
+                    boolean contain = false;
+                    for (ChannelPoolWrapper channelPoolWrapper : channelPoolWrappers) {
+                        if (isServerSame(channelPoolWrapper, service)) {
+                            contain = true;
+                            break;
+                        }
+                    }
+                    if (!contain) {
+                        addChannel(service.getAddress(), service.getPort());
+                    }
+                }
+
+            }
+        });
+
         log.info("connect...");
-        channelPoolWrapper = new ChannelPoolWrapper(this);
+
+        //TODO 通过注册中心拿服务
+
+    }
+
+    private boolean isServerSame(ChannelPoolWrapper channelPoolWrapper, Service service) {
+        return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+    }
+
+    private void addChannel(String host, int port) {
+        channelPoolWrappers.add(new ChannelPoolWrapper(this, host, port));
+    }
+
+
+    private ChannelPoolWrapper selectChannel() {
+        //TODO
+        return null;
     }
 
     public Response sendRequest(Method method, Object[] args, Class clazz, String serviceName) throws Exception {
         Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args, serviceName);
         request.setRequestId(atomicLong.incrementAndGet());
+        ChannelPoolWrapper channelPoolWrapper = selectChannel();
         Channel channel = channelPoolWrapper.getObject();
-        if(channel==null){
+        if (channel == null) {
             Validate.notNull(channel, "can't get channel from pool");
         }
         try {

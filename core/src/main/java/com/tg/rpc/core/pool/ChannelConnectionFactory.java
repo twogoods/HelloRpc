@@ -12,14 +12,18 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 public class ChannelConnectionFactory extends BasePooledObjectFactory<Channel> {
 
     private Client client;
+    private String host;
+    private int port;
 
-    public ChannelConnectionFactory(Client client) {
+    public ChannelConnectionFactory(Client client, String host, int port) {
         this.client = client;
+        this.host = host;
+        this.port = port;
     }
 
     @Override
     public Channel create() {
-        return client.initConnection();
+        return client.initConnection(host, port);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.tg.rpc.core.bootstrap;
 
-import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
+import com.tg.rpc.core.handler.channel.ServerChannelHandler;
+import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.entity.ServiceHolder;
 import com.tg.rpc.core.exception.ValidateException;
-import com.tg.rpc.core.handler.channel.ServerChannelHandler;
 import com.tg.rpc.core.handler.response.ResponseHandler;
 import com.tg.rpc.core.handler.response.DefaultResponseHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -29,6 +29,7 @@ public class Server {
 
     private int port;
     private int maxCapacity;
+    private String serverName;
     private ResponseHandler responseHandler;
 
 

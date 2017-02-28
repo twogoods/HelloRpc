@@ -1,8 +1,8 @@
 package com.tg.rpc.example.springsupport.client;
 
-import com.tg.rpc.example.service.EchoService;
 import com.tg.rpc.example.service.TestService;
 import com.tg.rpc.springsupport.annotation.RpcReferer;
+import com.tg.rpc.example.service.EchoService;
 import org.springframework.stereotype.Component;
 
 /**
