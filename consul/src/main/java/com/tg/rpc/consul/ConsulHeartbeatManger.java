@@ -1,6 +1,8 @@
 package com.tg.rpc.consul;
 
 import com.tg.rpc.core.servicecenter.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,6 +16,9 @@ import java.util.concurrent.TimeUnit;
  * @since 2017-02-22
  */
 public class ConsulHeartbeatManger {
+
+    private static final Logger log= LoggerFactory.getLogger(ConsulHeartbeatManger.class);
+
     private ConsulEcwidClient consulEcwidClient;
     private Service service;
 
@@ -36,9 +41,10 @@ public class ConsulHeartbeatManger {
             heartbeatExecutor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
+                    log.debug("send heartbeat...");
                     consulEcwidClient.checkPass(service.getId());
                 }
-            }, 0, service.getTtl(), TimeUnit.MILLISECONDS);
+            }, service.getTtl(), service.getTtl(), TimeUnit.MILLISECONDS);
         }
     }
 }

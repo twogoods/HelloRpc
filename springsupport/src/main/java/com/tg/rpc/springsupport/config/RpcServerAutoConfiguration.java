@@ -1,6 +1,9 @@
 package com.tg.rpc.springsupport.config;
 
+import com.tg.rpc.consul.ConsulCompentFactory;
 import com.tg.rpc.core.bootstrap.Server;
+import com.tg.rpc.core.servicecenter.Registery;
+import com.tg.rpc.core.servicecenter.ServiceRegistry;
 import com.tg.rpc.springsupport.bean.server.SpringBeanResponseHandler;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -27,10 +30,27 @@ public class RpcServerAutoConfiguration {
 
     @Bean
     public Server server() {
-        Server server = new Server.Builder().port(rpcConfig.getPort())
-                .maxCapacity(rpcConfig.getMaxCapacity())
-                .responseHandler(springBeanResponseHandler())
-                .build();
+        Server server;
+        if (Registery.DEFAULT.equals(rpcConfig.getRegistery())) {
+            server = new Server.Builder().port(rpcConfig.getPort())
+                    .maxCapacity(rpcConfig.getMaxCapacity())
+                    .responseHandler(springBeanResponseHandler())
+                    .build();
+        } else if (Registery.CONSUL.equals(rpcConfig.getRegistery())) {
+            ServiceRegistry serviceRegistry= ConsulCompentFactory.getRegistry();
+            server = new Server.Builder().serviceRegistry(serviceRegistry)
+                    .serverId(rpcConfig.getServerId())
+                    .serverName(rpcConfig.getServerName())
+                    .ttl(rpcConfig.getTTL())
+                    .maxCapacity(rpcConfig.getMaxCapacity())
+                    .responseHandler(springBeanResponseHandler())
+                    .build();
+        } else if (Registery.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
+            //TODO
+            throw new IllegalArgumentException("don't support");
+        } else {
+            throw new IllegalArgumentException("properity Registery illega");
+        }
         server.start();
         return server;
     }

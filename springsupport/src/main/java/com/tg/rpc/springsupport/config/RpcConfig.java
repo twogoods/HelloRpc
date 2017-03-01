@@ -1,5 +1,7 @@
 package com.tg.rpc.springsupport.config;
 
+import com.tg.rpc.core.entity.ConfigConstant;
+import com.tg.rpc.core.servicecenter.Registery;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -10,15 +12,23 @@ public class RpcConfig {
 
     public static final String TGRPC_PREFIX = "tgrpc";
 
-    private String host = "127.0.0.1";
-    private int port = 9100;
-    private int maxCapacity = 8;
-    private int requestTimeoutMillis = 8000;
+    private String host = ConfigConstant.DEFAULT_HOST;
+    private int port = ConfigConstant.DEFAULT_PORT;
+    private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
+    private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;
 
-    private int maxTotal = 8;
-    private int maxIdle = 8;
-    private int minIdle = 0;
-    private int borrowMaxWaitMillis = 8000;
+    private int maxTotal = ConfigConstant.DEFAULT_POOL_MAXTOTAL;
+    private int maxIdle = ConfigConstant.DEFAULT_POOL_MAXIDLE;
+    private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
+    private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
+
+    private String consulHost = ConfigConstant.DEFAULT_CONSUL_HOST;
+    private int consulPort = ConfigConstant.DEFAULT_CONSUL_PORT;
+    private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
+    private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
+    private long ttl = ConfigConstant.DEFAULT_TTL;
+
+    private String registery= Registery.DEFAULT.value();
 
     public String getHost() {
         return host;
@@ -84,17 +94,51 @@ public class RpcConfig {
         this.borrowMaxWaitMillis = borrowMaxWaitMillis;
     }
 
-    @Override
-    public String toString() {
-        return "RpcConfig{" +
-                "host='" + host + '\'' +
-                ", port=" + port +
-                ", maxCapacity=" + maxCapacity +
-                ", requestTimeoutMillis=" + requestTimeoutMillis +
-                ", maxTotal=" + maxTotal +
-                ", maxIdle=" + maxIdle +
-                ", minIdle=" + minIdle +
-                ", borrowMaxWaitMillis=" + borrowMaxWaitMillis +
-                '}';
+    public String getConsulHost() {
+        return consulHost;
+    }
+
+    public void setConsulHost(String consulHost) {
+        this.consulHost = consulHost;
+    }
+
+    public int getConsulPort() {
+        return consulPort;
+    }
+
+    public void setConsulPort(int consulPort) {
+        this.consulPort = consulPort;
+    }
+
+    public String getServerName() {
+        return serverName;
+    }
+
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+    }
+
+    public String getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(String serverId) {
+        this.serverId = serverId;
+    }
+
+    public long getTTL() {
+        return ttl;
+    }
+
+    public void setTTL(long ttl) {
+        this.ttl = ttl;
+    }
+
+    public String getRegistery() {
+        return registery;
+    }
+
+    public void setRegistery(String registery) {
+        this.registery = registery;
     }
 }

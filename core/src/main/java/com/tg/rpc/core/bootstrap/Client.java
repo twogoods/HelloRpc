@@ -41,13 +41,13 @@ public class Client {
     private int port;
     private int maxCapacity;
     private int requestTimeoutMillis;
-    private String serverName;
 
     private int maxTotal;
     private int maxIdle;
     private int minIdle;
     private int borrowMaxWaitMillis;
 
+    private String serverName;
     private ServiceDiscovery serviceDiscovery;
 
     private CopyOnWriteArrayList<ChannelPoolWrapper> channelPoolWrappers = new CopyOnWriteArrayList();
@@ -197,6 +197,7 @@ public class Client {
 
     private void init() {
         if (serviceDiscovery != null) {
+            log.info("Registery mode! service discover...");
             List<Service> serviceList = serviceDiscovery.discover(serverName);
             for (Service service : serviceList) {
                 addChannel(service);
@@ -213,7 +214,7 @@ public class Client {
                 public void handle(List<Service> services) {
                     List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
                     List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
-                    log.info("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
+                    log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
                     for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
                         removeChannel(channelPoolWrapper);
                     }
@@ -225,7 +226,6 @@ public class Client {
         } else {
             addChannel(host, port);
         }
-        log.info("connect...");
     }
 
     private void addChannel(Service service) {

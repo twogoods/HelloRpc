@@ -17,11 +17,6 @@
             <version>0.1</version>
         </dependency>
         <dependency>
-            <groupId>com.tg.rpc</groupId>
-            <artifactId>springsupport</artifactId>
-            <version>0.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.ecwid.consul</groupId>
             <artifactId>consul-api</artifactId>
             <version>1.2.1</version>

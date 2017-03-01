@@ -13,5 +13,11 @@
         <Logger name="org.apache.http" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="org.springframework" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.netty" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

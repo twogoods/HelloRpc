@@ -1,6 +1,8 @@
 tgrpc:
     host: 127.0.0.1
     port: 9100
+    registery: consul
+    ttl: 2000
     maxCapacity: 3
     requestTimeoutMillis: 8000
     maxTotal: 3
