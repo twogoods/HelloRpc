@@ -4,8 +4,8 @@ import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.entity.ResponseCodeConstant;
 import com.tg.rpc.core.entity.ServiceHolder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
  */
 public class DefaultResponseHandler implements ResponseHandler {
 
-    private static Logger log = LogManager.getLogger(DefaultResponseHandler.class);
+    private static Logger log = LoggerFactory.getLogger(DefaultResponseHandler.class);
 
     @Override
     public Response handle(Request request) {

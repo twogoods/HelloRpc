@@ -20,15 +20,22 @@ public class ConsulRegistry implements ServiceRegistry {
         this.consulHeartbeatManger = new ConsulHeartbeatManger(consulEcwidClient);
     }
 
+    public ConsulRegistry(ConsulEcwidClient consulEcwidClient, ConsulHeartbeatManger consulHeartbeatManger) {
+        this.consulEcwidClient = consulEcwidClient;
+        this.consulHeartbeatManger = consulHeartbeatManger;
+    }
+
     @Override
     public void register(Service service) {
         consulEcwidClient.registerService(service);
-        consulHeartbeatManger.addHeartbeatService(service.getId());
+        consulEcwidClient.checkPass(service.getId());
+        consulHeartbeatManger.setHeartbeatService(service);
+        consulHeartbeatManger.start();
     }
 
     @Override
     public void unregister(Service service) {
         consulEcwidClient.unregisterService(service.getId());
-        consulHeartbeatManger.removeHeartbeatService(service.getId());
+        consulHeartbeatManger.removeHeartbeatService();
     }
 }

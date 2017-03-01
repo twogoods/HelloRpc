@@ -1,7 +1,5 @@
 package com.tg.rpc.core.servicecenter;
 
-import java.net.URL;
-
 /**
  * Description:
  *

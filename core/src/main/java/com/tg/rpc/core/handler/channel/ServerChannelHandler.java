@@ -5,15 +5,15 @@ import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.handler.response.ResponseHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by twogoods on 17/2/16.
  */
 public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
 
-    private static Logger log = LogManager.getLogger(ServerChannelHandler.class);
+    private static Logger log = LoggerFactory.getLogger(ServerChannelHandler.class);
     private ResponseHandler responseHandler;
 
     public ServerChannelHandler(ResponseHandler responseHandler) {

@@ -1,8 +1,10 @@
 package com.tg.rpc.consul;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import com.tg.rpc.core.servicecenter.Service;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Description:
@@ -13,24 +15,30 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConsulHeartbeatManger {
     private ConsulEcwidClient consulEcwidClient;
+    private Service service;
 
-    private HashSet<String> serviceIds = new HashSet<String>();
+    ScheduledExecutorService heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
 
     public ConsulHeartbeatManger(ConsulEcwidClient consulEcwidClient) {
         this.consulEcwidClient = consulEcwidClient;
     }
 
-    public void addHeartbeatService(String serviceId){
-        serviceIds.add(serviceId);
+    public void setHeartbeatService(Service service) {
+        this.service = service;
     }
 
-    public void removeHeartbeatService(String serviceId){
-        serviceIds.remove(serviceId);
+    public void removeHeartbeatService() {
+        heartbeatExecutor.shutdownNow();
     }
 
-
-
-
-
-
+    public void start() {
+        if(service!=null){
+            heartbeatExecutor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    consulEcwidClient.checkPass(service.getId());
+                }
+            }, 0, service.getTtl(), TimeUnit.MILLISECONDS);
+        }
+    }
 }

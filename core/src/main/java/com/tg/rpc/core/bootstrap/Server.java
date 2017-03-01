@@ -1,12 +1,15 @@
 package com.tg.rpc.core.bootstrap;
 
 import com.tg.rpc.core.codec.ProtocolEncoder;
+import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.handler.channel.ServerChannelHandler;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.entity.ServiceHolder;
 import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.handler.response.ResponseHandler;
 import com.tg.rpc.core.handler.response.DefaultResponseHandler;
+import com.tg.rpc.core.servicecenter.Service;
+import com.tg.rpc.core.servicecenter.ServiceRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -18,19 +21,25 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created by twogoods on 17/2/16.
  */
 public class Server {
-    private static Logger log = LogManager.getLogger(Server.class);
+    private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private int port;
     private int maxCapacity;
+    private long ttl;
     private String serverName;
+    private String serverId;
     private ResponseHandler responseHandler;
+    private ServiceRegistry serviceRegistry;
 
 
     private Server(int port, int maxCapacity, ResponseHandler responseHandler) {
@@ -39,10 +48,24 @@ public class Server {
         this.responseHandler = responseHandler;
     }
 
+    public Server(int port, int maxCapacity, long ttl, String serverName, String serverId, ResponseHandler responseHandler, ServiceRegistry serviceRegistry) {
+        this.port = port;
+        this.maxCapacity = maxCapacity;
+        this.ttl = ttl;
+        this.serverName = serverName;
+        this.serverId = serverId;
+        this.responseHandler = responseHandler;
+        this.serviceRegistry = serviceRegistry;
+    }
+
     public static class Builder {
-        private int port;
-        private int maxCapacity;
+        private int port = ConfigConstant.DEFAULT_PORT;
+        private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
+        private long ttl = ConfigConstant.DEFAULT_TTL;
+        private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
+        private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
         private ResponseHandler responseHandler = new DefaultResponseHandler();
+        private ServiceRegistry serviceRegistry;
 
         public Server.Builder port(int port) {
             this.port = port;
@@ -54,16 +77,39 @@ public class Server {
             return this;
         }
 
+        public Server.Builder ttl(long ttl) {
+            this.ttl = ttl;
+            return this;
+        }
+
+        public Server.Builder serverName(String serverName) {
+            this.serverName = serverName;
+            return this;
+        }
+
+        public Server.Builder serverId(String serverId) {
+            this.serverId = serverId;
+            return this;
+        }
+
         public Server.Builder responseHandler(ResponseHandler responseHandler) {
             this.responseHandler = responseHandler;
+            return this;
+        }
+
+        public Server.Builder serviceRegistry(ServiceRegistry serviceRegistry) {
+            this.serviceRegistry = serviceRegistry;
             return this;
         }
 
         public Server build() {
             Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
             Validate.isTrue(maxCapacity > 0, "maxCapacity can't be negative, maxCapacity:%d", maxCapacity);
+            Validate.isTrue(ttl > 0, "time to live can't be negative, ttl:%d", ttl);
+            Validate.notEmpty(serverName, "serverName can't be empty");
+            Validate.notEmpty(serverId, "serverName can't be empty");
             Validate.notNull(responseHandler, "responseHandler can't be null");
-            return new Server(port, maxCapacity, responseHandler);
+            return new Server(port, maxCapacity, ttl, serverName, serverId, responseHandler, serviceRegistry);
         }
     }
 
@@ -84,6 +130,10 @@ public class Server {
                     });
             ChannelFuture channelFuture = bootstrap.bind(port).sync();
             log.info("Server start success, in port:{}", port);
+            if (serviceRegistry != null) {
+                registerService();
+                log.info("Server register success.");
+            }
             channelFuture.channel().closeFuture().addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
@@ -93,6 +143,25 @@ public class Server {
         } catch (Exception e) {
             log.error("server start failed!", e);
         }
+    }
+
+    private void registerService() {
+        Service service = new Service();
+        service.setId(serverId);
+        service.setName(serverName);
+        service.setAddress(getLocalIp());
+        service.setPort(port);
+        service.setTtl(ttl);
+        serviceRegistry.register(service);
+    }
+
+    private String getLocalIp() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            log.error("can't get local ip:{}", e);
+        }
+        return null;
     }
 
     public void shutdown() {

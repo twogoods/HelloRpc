@@ -1,13 +1,13 @@
 package com.tg.rpc.consul;
 
+import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.servicecenter.Service;
 import com.tg.rpc.core.servicecenter.ServiceChangeHandler;
 import com.tg.rpc.core.servicecenter.ServiceDiscovery;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Description:
@@ -18,19 +18,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConsulDiscovery implements ServiceDiscovery {
 
-    private static Logger log = LogManager.getLogger(ConsulDiscovery.class);
+    private static Logger log = LoggerFactory.getLogger(ConsulDiscovery.class);
 
     private ConsulEcwidClient consulEcwidClient;
-    private ConsulHeartbeatManger consulHeartbeatManger;
-    private long lookupInterval;
+    private long lookupInterval = ConfigConstant.DEFAULT_CONSUL_LOOKUPINTERVAL;
 
-    private ConcurrentHashMap<String, Service> serviceCache = new ConcurrentHashMap<>();
-
-    public ConsulDiscovery(ConsulEcwidClient consulEcwidClient, ConsulHeartbeatManger consulHeartbeatManger) {
+    public ConsulDiscovery(ConsulEcwidClient consulEcwidClient) {
         this.consulEcwidClient = consulEcwidClient;
-        this.consulHeartbeatManger = consulHeartbeatManger;
     }
 
+    public ConsulDiscovery(ConsulEcwidClient consulEcwidClient, long lookupInterval) {
+        this.consulEcwidClient = consulEcwidClient;
+        this.lookupInterval = lookupInterval;
+    }
 
     @Override
     public List<Service> discover(String serviceId) {

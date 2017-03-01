@@ -37,7 +37,6 @@ public class ConsulEcwidClient {
         consulClient.agentCheckPass("service:" + serviceId);
     }
 
-
     public List<Service> lookupHealthService(String serviceName) {
         Response<List<HealthService>> response = consulClient.getHealthServices(serviceName, true, QueryParams.DEFAULT);
         List<Service> list = new ArrayList<>(response.getValue().size());
@@ -54,7 +53,7 @@ public class ConsulEcwidClient {
         newService.setAddress(service.getAddress());
         newService.setPort(service.getPort());
         NewService.Check serviceCheck = new NewService.Check();
-        serviceCheck.setTtl(service.getTtl() + "s");
+        serviceCheck.setTtl(service.getTtl()/1000 + "s");
         newService.setCheck(serviceCheck);
         return newService;
     }
@@ -67,10 +66,4 @@ public class ConsulEcwidClient {
         service.setPort(healthService.getService().getPort());
         return service;
     }
-
-    public static void main(String[] args) {
-        ConsulEcwidClient client = new ConsulEcwidClient("127.0.0.1", 8500);
-        System.out.println(client.lookupHealthService("book"));
-    }
-
 }

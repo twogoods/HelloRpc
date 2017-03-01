@@ -5,8 +5,8 @@ import com.tg.rpc.core.entity.ResponseCodeConstant;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.response.ResponseHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 @Component
 public class SpringBeanResponseHandler implements ResponseHandler, BeanFactoryAware {
 
-    private static Logger log = LogManager.getLogger(SpringBeanResponseHandler.class);
+    private static Logger log = LoggerFactory.getLogger(SpringBeanResponseHandler.class);
 
     private BeanFactory beanFactory;
 

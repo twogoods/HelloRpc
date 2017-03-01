@@ -2,14 +2,14 @@ package com.tg.rpc.core.bootstrap;
 
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
+import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.channel.ClientChannelHandler;
-import com.tg.rpc.core.servicecenter.Service;
-import com.tg.rpc.core.servicecenter.ServiceChangeHandler;
-import com.tg.rpc.core.servicecenter.ServiceDiscovery;
+import com.tg.rpc.core.servicecenter.*;
+import com.tg.rpc.core.servicecenter.Comparable;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -19,12 +19,12 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.spi.CopyOnWrite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,11 +35,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * Created by twogoods on 17/2/16.
  */
 public class Client {
-    private static Logger log = LogManager.getLogger(Client.class);
+    private static final Logger log = LoggerFactory.getLogger(Client.class);
 
     private String host;
     private int port;
-    private ServiceDiscovery serviceDiscovery;
     private int maxCapacity;
     private int requestTimeoutMillis;
     private String serverName;
@@ -48,6 +47,8 @@ public class Client {
     private int maxIdle;
     private int minIdle;
     private int borrowMaxWaitMillis;
+
+    private ServiceDiscovery serviceDiscovery;
 
     private CopyOnWriteArrayList<ChannelPoolWrapper> channelPoolWrappers = new CopyOnWriteArrayList();
 
@@ -63,30 +64,24 @@ public class Client {
     }
 
     public static class Builder {
-        private String host;
-        private int port;
+        private String host = ConfigConstant.DEFAULT_HOST;
+        private int port = ConfigConstant.DEFAULT_PORT;
         private ServiceDiscovery serviceDiscovery;
-        private int maxCapacity = 8;
-        private int requestTimeoutMillis = 8000;
-        private String serverName = "default_rpc";
+        private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
+        private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;
+        private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
 
-        private int maxTotal = 8;
-        private int maxIdle = 8;
-        private int minIdle = 0;
-        private int borrowMaxWaitMillis = 8000;
+        private int maxTotal = ConfigConstant.DEFAULT_POOL_MAXTOTAL;
+        private int maxIdle = ConfigConstant.DEFAULT_POOL_MAXIDLE;
+        private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
+        private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
 
         public Client.Builder host(String host) {
-            if (StringUtils.isEmpty(host)) {
-                throw new NullPointerException("host can't be null");
-            }
             this.host = host;
             return this;
         }
 
         public Client.Builder port(int port) {
-            if (port <= 0) {
-                throw new IllegalArgumentException("port can't be negative");
-            }
             this.port = port;
             return this;
         }
@@ -126,6 +121,11 @@ public class Client {
             return this;
         }
 
+        public Client.Builder serviceDiscovery(ServiceDiscovery serviceDiscovery) {
+            this.serviceDiscovery = serviceDiscovery;
+            return this;
+        }
+
         public Client build() {
             Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
             Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
@@ -149,6 +149,7 @@ public class Client {
             client.maxIdle = this.maxIdle;
             client.minIdle = this.minIdle;
             client.borrowMaxWaitMillis = this.borrowMaxWaitMillis;
+            client.serviceDiscovery = serviceDiscovery;
             client.init();
             return client;
         }
@@ -198,65 +199,58 @@ public class Client {
         if (serviceDiscovery != null) {
             List<Service> serviceList = serviceDiscovery.discover(serverName);
             for (Service service : serviceList) {
-                addChannel(service.getAddress(), service.getPort());
+                addChannel(service);
             }
+            final Comparable<ChannelPoolWrapper, Service> comparable = new Comparable<ChannelPoolWrapper, Service>() {
+                @Override
+                public boolean equals(ChannelPoolWrapper channelPoolWrapper, Service service) {
+                    return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+                }
+            };
+
+            serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
+                @Override
+                public void handle(List<Service> services) {
+                    List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
+                    List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
+                    log.info("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
+                    for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
+                        removeChannel(channelPoolWrapper);
+                    }
+                    for (Service service : shouldAdded) {
+                        addChannel(service);
+                    }
+                }
+            });
         } else {
             addChannel(host, port);
         }
-
-        serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
-            @Override
-            public void handle(List<Service> services) {
-
-                //去除
-                for (ChannelPoolWrapper channelPoolWrapper : channelPoolWrappers) {
-                    boolean channelcontain = false;
-                    for (Service service : services) {
-                        if (isServerSame(channelPoolWrapper, service)) {
-                            channelcontain = true;
-                            break;
-                        }
-                    }
-                    if(!channelcontain){
-                        channelPoolWrappers.remove(channelPoolWrapper);
-                    }
-                }
-
-                //增加新的
-                for (Service service : services) {
-                    boolean contain = false;
-                    for (ChannelPoolWrapper channelPoolWrapper : channelPoolWrappers) {
-                        if (isServerSame(channelPoolWrapper, service)) {
-                            contain = true;
-                            break;
-                        }
-                    }
-                    if (!contain) {
-                        addChannel(service.getAddress(), service.getPort());
-                    }
-                }
-
-            }
-        });
-
         log.info("connect...");
-
-        //TODO 通过注册中心拿服务
-
     }
 
-    private boolean isServerSame(ChannelPoolWrapper channelPoolWrapper, Service service) {
-        return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+    private void addChannel(Service service) {
+        channelPoolWrappers.add(new ChannelPoolWrapper(this, service.getAddress(), service.getPort()));
     }
 
     private void addChannel(String host, int port) {
         channelPoolWrappers.add(new ChannelPoolWrapper(this, host, port));
     }
 
+    private void removeChannel(ChannelPoolWrapper channelPoolWrapper) {
+        channelPoolWrapper.close();
+        channelPoolWrappers.remove(channelPoolWrapper);
+    }
+
 
     private ChannelPoolWrapper selectChannel() {
-        //TODO
-        return null;
+        //TODO 支持多种方式
+        Random random = new Random();
+        int size = channelPoolWrappers.size();
+        if (size < 1) {
+            return null;
+        }
+        int i = random.nextInt(size);
+        return channelPoolWrappers.get(i);
     }
 
     public Response sendRequest(Method method, Object[] args, Class clazz, String serviceName) throws Exception {

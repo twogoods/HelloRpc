@@ -3,8 +3,8 @@ package com.tg.rpc.core.entity;
 import com.tg.rpc.core.exception.ValidateException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class ServiceHolder {
 
-    private static Logger log = LogManager.getLogger(ServiceHolder.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceHolder.class);
 
     private static Map<String, Object> serviceMap = new HashMap<>();
 
