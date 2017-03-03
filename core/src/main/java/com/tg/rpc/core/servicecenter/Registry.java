@@ -7,14 +7,14 @@ package com.tg.rpc.core.servicecenter;
  * @version 0.1
  * @since 2017-03-01
  */
-public enum Registery {
+public enum Registry {
     DEFAULT("default"),
     CONSUL("consul"),
     ZOOKEEPER("zookeeper");
 
     private String name;
 
-    private Registery(String name) {
+    private Registry(String name) {
         this.name = name;
     }
 
@@ -25,4 +25,5 @@ public enum Registery {
     public boolean equals(String name) {
         return this.name.equals(name);
     }
+    
 }

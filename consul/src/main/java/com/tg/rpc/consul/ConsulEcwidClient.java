@@ -38,6 +38,7 @@ public class ConsulEcwidClient {
     }
 
     public List<Service> lookupHealthService(String serviceName) {
+        //TODO 使用block query改进
         Response<List<HealthService>> response = consulClient.getHealthServices(serviceName, true, QueryParams.DEFAULT);
         List<Service> list = new ArrayList<>(response.getValue().size());
         for (HealthService healthService : response.getValue()) {

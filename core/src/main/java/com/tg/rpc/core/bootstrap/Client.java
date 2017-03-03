@@ -197,7 +197,7 @@ public class Client {
 
     private void init() {
         if (serviceDiscovery != null) {
-            log.info("Registery mode! service discover...");
+            log.info("Registry mode! service discover...");
             List<Service> serviceList = serviceDiscovery.discover(serverName);
             for (Service service : serviceList) {
                 addChannel(service);

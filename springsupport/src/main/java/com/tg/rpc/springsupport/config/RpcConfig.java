@@ -1,7 +1,7 @@
 package com.tg.rpc.springsupport.config;
 
 import com.tg.rpc.core.entity.ConfigConstant;
-import com.tg.rpc.core.servicecenter.Registery;
+import com.tg.rpc.core.servicecenter.Registry;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -28,7 +28,7 @@ public class RpcConfig {
     private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
     private long ttl = ConfigConstant.DEFAULT_TTL;
 
-    private String registery= Registery.DEFAULT.value();
+    private String registery= Registry.DEFAULT.value();
 
     public String getHost() {
         return host;

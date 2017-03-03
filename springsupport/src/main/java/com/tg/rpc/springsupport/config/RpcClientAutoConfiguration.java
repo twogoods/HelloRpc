@@ -6,7 +6,7 @@ import com.tg.rpc.core.proxy.DefaultClientInterceptor;
 import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.proxy.CglibClientProxy;
 import com.tg.rpc.core.proxy.MethodInterceptor;
-import com.tg.rpc.core.servicecenter.Registery;
+import com.tg.rpc.core.servicecenter.Registry;
 import com.tg.rpc.core.servicecenter.ServiceDiscovery;
 import com.tg.rpc.springsupport.bean.client.RpcClientBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,31 +31,14 @@ public class RpcClientAutoConfiguration {
     @Bean("defaultClient")
     public Client client() {
         Client client;
-        if (Registery.DEFAULT.equals(rpcConfig.getRegistery())) {
-            client = new Client.Builder().host(rpcConfig.getHost())
-                    .port(rpcConfig.getPort())
-                    .maxCapacity(rpcConfig.getMaxCapacity())
-                    .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                    .connectionMaxTotal(rpcConfig.getMaxTotal())
-                    .connectionMaxIdle(rpcConfig.getMaxIdle())
-                    .connectionMinIdle(rpcConfig.getMinIdle())
-                    .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
-                    .build();
-        } else if (Registery.CONSUL.equals(rpcConfig.getRegistery())) {
-            ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery();
-            client = new Client.Builder().serviceDiscovery(serviceDiscovery)
-                    .serverName(rpcConfig.getServerName())
-                    .maxCapacity(rpcConfig.getMaxCapacity())
-                    .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                    .connectionMaxTotal(rpcConfig.getMaxTotal())
-                    .connectionMaxIdle(rpcConfig.getMaxIdle())
-                    .connectionMinIdle(rpcConfig.getMinIdle())
-                    .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
-                    .build();
-        } else if (Registery.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
+        if (Registry.DEFAULT.equals(rpcConfig.getRegistery())) {
+            client=clientWithoutregistry();
+        } else if (Registry.CONSUL.equals(rpcConfig.getRegistery())) {
+            client=clientWithConsul();
+        } else if (Registry.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
             throw new IllegalArgumentException("don't support");
         } else {
-            throw new IllegalArgumentException("properity Registery illega");
+            throw new IllegalArgumentException("properity Registry illega");
         }
         return client;
     }
@@ -73,5 +56,32 @@ public class RpcClientAutoConfiguration {
     @Bean
     public RpcClientBeanPostProcessor rpcClientBeanPostProcessor(@Qualifier("cglibClientProxy") ClientProxy cglibClientProxy) {
         return new RpcClientBeanPostProcessor(cglibClientProxy);
+    }
+
+    private Client clientWithoutregistry(){
+        return new Client.Builder().host(rpcConfig.getHost())
+                .port(rpcConfig.getPort())
+                .maxCapacity(rpcConfig.getMaxCapacity())
+                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
+                .connectionMaxTotal(rpcConfig.getMaxTotal())
+                .connectionMaxIdle(rpcConfig.getMaxIdle())
+                .connectionMinIdle(rpcConfig.getMinIdle())
+                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
+                .build();
+    }
+    private Client clientWithConsul(){
+        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery();
+        return new Client.Builder().serviceDiscovery(serviceDiscovery)
+                .serverName(rpcConfig.getServerName())
+                .maxCapacity(rpcConfig.getMaxCapacity())
+                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
+                .connectionMaxTotal(rpcConfig.getMaxTotal())
+                .connectionMaxIdle(rpcConfig.getMaxIdle())
+                .connectionMinIdle(rpcConfig.getMinIdle())
+                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
+                .build();
+    }
+    private Client clientWithZookeeper(){
+        return null;
     }
 }

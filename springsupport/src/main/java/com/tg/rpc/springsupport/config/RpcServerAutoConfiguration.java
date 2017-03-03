@@ -2,7 +2,7 @@ package com.tg.rpc.springsupport.config;
 
 import com.tg.rpc.consul.ConsulCompentFactory;
 import com.tg.rpc.core.bootstrap.Server;
-import com.tg.rpc.core.servicecenter.Registery;
+import com.tg.rpc.core.servicecenter.Registry;
 import com.tg.rpc.core.servicecenter.ServiceRegistry;
 import com.tg.rpc.springsupport.bean.server.SpringBeanResponseHandler;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,28 +31,42 @@ public class RpcServerAutoConfiguration {
     @Bean
     public Server server() {
         Server server;
-        if (Registery.DEFAULT.equals(rpcConfig.getRegistery())) {
-            server = new Server.Builder().port(rpcConfig.getPort())
-                    .maxCapacity(rpcConfig.getMaxCapacity())
-                    .responseHandler(springBeanResponseHandler())
-                    .build();
-        } else if (Registery.CONSUL.equals(rpcConfig.getRegistery())) {
-            ServiceRegistry serviceRegistry= ConsulCompentFactory.getRegistry();
-            server = new Server.Builder().serviceRegistry(serviceRegistry)
-                    .serverId(rpcConfig.getServerId())
-                    .serverName(rpcConfig.getServerName())
-                    .ttl(rpcConfig.getTTL())
-                    .maxCapacity(rpcConfig.getMaxCapacity())
-                    .responseHandler(springBeanResponseHandler())
-                    .build();
-        } else if (Registery.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
+        if (Registry.DEFAULT.equals(rpcConfig.getRegistery())) {
+            server = serverWithoutregistry();
+        } else if (Registry.CONSUL.equals(rpcConfig.getRegistery())) {
+            server = serverWithConsul();
+        } else if (Registry.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
             //TODO
             throw new IllegalArgumentException("don't support");
         } else {
-            throw new IllegalArgumentException("properity Registery illega");
+            throw new IllegalArgumentException("properity Registry illega");
         }
         server.start();
         return server;
     }
+
+
+    private Server serverWithoutregistry() {
+        return new Server.Builder().port(rpcConfig.getPort())
+                .maxCapacity(rpcConfig.getMaxCapacity())
+                .responseHandler(springBeanResponseHandler())
+                .build();
+    }
+
+    private Server serverWithConsul() {
+        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry();
+        return new Server.Builder().serviceRegistry(serviceRegistry)
+                .serverId(rpcConfig.getServerId())
+                .serverName(rpcConfig.getServerName())
+                .ttl(rpcConfig.getTTL())
+                .maxCapacity(rpcConfig.getMaxCapacity())
+                .responseHandler(springBeanResponseHandler())
+                .build();
+    }
+
+    private Server serverWithZookeeper() {
+        return null;
+    }
+
 
 }
