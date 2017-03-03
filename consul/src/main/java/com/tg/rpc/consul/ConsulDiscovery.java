@@ -33,8 +33,8 @@ public class ConsulDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public List<Service> discover(String serviceId) {
-        return consulEcwidClient.lookupHealthService(serviceId);
+    public List<Service> discover(String serviceName) {
+        return consulEcwidClient.lookupHealthService(serviceName);
     }
 
     @Override

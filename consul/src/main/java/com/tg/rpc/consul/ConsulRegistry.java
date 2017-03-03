@@ -14,13 +14,14 @@ public class ConsulRegistry implements ServiceRegistry {
 
     private ConsulEcwidClient consulEcwidClient;
     private ConsulHeartbeatManger consulHeartbeatManger;
+    private long ttl;
 
-    public ConsulRegistry(ConsulEcwidClient consulEcwidClient) {
-        this.consulEcwidClient = consulEcwidClient;
-        this.consulHeartbeatManger = new ConsulHeartbeatManger(consulEcwidClient);
+    public ConsulRegistry(ConsulEcwidClient consulEcwidClient, long ttl) {
+        this(consulEcwidClient, new ConsulHeartbeatManger(consulEcwidClient), ttl);
     }
 
-    public ConsulRegistry(ConsulEcwidClient consulEcwidClient, ConsulHeartbeatManger consulHeartbeatManger) {
+    public ConsulRegistry(ConsulEcwidClient consulEcwidClient, ConsulHeartbeatManger consulHeartbeatManger, long ttl) {
+        this.ttl = ttl;
         this.consulEcwidClient = consulEcwidClient;
         this.consulHeartbeatManger = consulHeartbeatManger;
     }
@@ -37,5 +38,15 @@ public class ConsulRegistry implements ServiceRegistry {
     public void unregister(Service service) {
         consulEcwidClient.unregisterService(service.getId());
         consulHeartbeatManger.removeHeartbeatService();
+    }
+
+    @Override
+    public long getTTL() {
+        return ttl;
+    }
+
+    @Override
+    public void close() {
+
     }
 }

@@ -5,6 +5,7 @@ import com.tg.rpc.core.bootstrap.Server;
 import com.tg.rpc.core.servicecenter.Registry;
 import com.tg.rpc.core.servicecenter.ServiceRegistry;
 import com.tg.rpc.springsupport.bean.server.SpringBeanResponseHandler;
+import com.tg.rpc.zookeeper.ZookeeperCompentFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(RpcConfig.class)
 public class RpcServerAutoConfiguration {
-
 
     private final RpcConfig rpcConfig;
 
@@ -36,8 +36,7 @@ public class RpcServerAutoConfiguration {
         } else if (Registry.CONSUL.equals(rpcConfig.getRegistery())) {
             server = serverWithConsul();
         } else if (Registry.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
-            //TODO
-            throw new IllegalArgumentException("don't support");
+            server = serverWithZookeeper();
         } else {
             throw new IllegalArgumentException("properity Registry illega");
         }
@@ -54,18 +53,23 @@ public class RpcServerAutoConfiguration {
     }
 
     private Server serverWithConsul() {
-        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry();
+        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry(rpcConfig.getConsulHost(), rpcConfig.getConsulPort(), rpcConfig.getTTL());
         return new Server.Builder().serviceRegistry(serviceRegistry)
                 .serverId(rpcConfig.getServerId())
                 .serverName(rpcConfig.getServerName())
-                .ttl(rpcConfig.getTTL())
                 .maxCapacity(rpcConfig.getMaxCapacity())
                 .responseHandler(springBeanResponseHandler())
                 .build();
     }
 
     private Server serverWithZookeeper() {
-        return null;
+        ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry(rpcConfig.getZookeeperHost(), rpcConfig.getZookeeperPort(), rpcConfig.getZkServicePath());
+        return new Server.Builder().serviceRegistry(serviceRegistry)
+                .serverId(rpcConfig.getServerId())
+                .serverName(rpcConfig.getServerName())
+                .maxCapacity(rpcConfig.getMaxCapacity())
+                .responseHandler(springBeanResponseHandler())
+                .build();
     }
 
 

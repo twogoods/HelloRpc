@@ -13,6 +13,7 @@
         <module>springsupport</module>
         <module>example</module>
         <module>consul</module>
+        <module>zookeeper</module>
     </modules>
 
     <properties>

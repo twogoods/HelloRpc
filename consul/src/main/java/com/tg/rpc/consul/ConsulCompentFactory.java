@@ -13,14 +13,17 @@ import com.tg.rpc.core.servicecenter.ServiceRegistry;
  */
 public class ConsulCompentFactory {
 
-    public static ServiceRegistry getRegistry(String host, int port) {
+    public static ServiceRegistry getRegistry(String host, int port, long ttl) {
         ConsulEcwidClient consulEcwidClient = new ConsulEcwidClient(host, port);
-        return new ConsulRegistry(consulEcwidClient);
+        return new ConsulRegistry(consulEcwidClient, ttl);
+    }
+
+    public static ServiceRegistry getRegistry(String host, int port) {
+        return getRegistry(host, port, ConfigConstant.DEFAULT_TTL);
     }
 
     public static ServiceRegistry getRegistry() {
-        ConsulEcwidClient consulEcwidClient = new ConsulEcwidClient(ConfigConstant.DEFAULT_CONSUL_HOST, ConfigConstant.DEFAULT_CONSUL_PORT);
-        return new ConsulRegistry(consulEcwidClient);
+        return getRegistry(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT, ConfigConstant.DEFAULT_TTL);
     }
 
     public static ServiceDiscovery getDiscovery(String host, int port) {
@@ -29,7 +32,6 @@ public class ConsulCompentFactory {
     }
 
     public static ServiceDiscovery getDiscovery() {
-        ConsulEcwidClient consulEcwidClient = new ConsulEcwidClient(ConfigConstant.DEFAULT_CONSUL_HOST, ConfigConstant.DEFAULT_CONSUL_PORT);
-        return new ConsulDiscovery(consulEcwidClient);
+        return getDiscovery(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT);
     }
 }

@@ -35,7 +35,6 @@ public class Server {
 
     private int port;
     private int maxCapacity;
-    private long ttl;
     private String serverName;
     private String serverId;
     private ResponseHandler responseHandler;
@@ -48,10 +47,9 @@ public class Server {
         this.responseHandler = responseHandler;
     }
 
-    public Server(int port, int maxCapacity, long ttl, String serverName, String serverId, ResponseHandler responseHandler, ServiceRegistry serviceRegistry) {
+    private Server(int port, int maxCapacity, String serverName, String serverId, ResponseHandler responseHandler, ServiceRegistry serviceRegistry) {
         this.port = port;
         this.maxCapacity = maxCapacity;
-        this.ttl = ttl;
         this.serverName = serverName;
         this.serverId = serverId;
         this.responseHandler = responseHandler;
@@ -61,7 +59,6 @@ public class Server {
     public static class Builder {
         private int port = ConfigConstant.DEFAULT_PORT;
         private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
-        private long ttl = ConfigConstant.DEFAULT_TTL;
         private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
         private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
         private ResponseHandler responseHandler = new DefaultResponseHandler();
@@ -74,11 +71,6 @@ public class Server {
 
         public Server.Builder maxCapacity(int maxCapacity) {
             this.maxCapacity = maxCapacity;
-            return this;
-        }
-
-        public Server.Builder ttl(long ttl) {
-            this.ttl = ttl;
             return this;
         }
 
@@ -105,11 +97,10 @@ public class Server {
         public Server build() {
             Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
             Validate.isTrue(maxCapacity > 0, "maxCapacity can't be negative, maxCapacity:%d", maxCapacity);
-            Validate.isTrue(ttl > 0, "time to live can't be negative, ttl:%d", ttl);
             Validate.notEmpty(serverName, "serverName can't be empty");
             Validate.notEmpty(serverId, "serverName can't be empty");
             Validate.notNull(responseHandler, "responseHandler can't be null");
-            return new Server(port, maxCapacity, ttl, serverName, serverId, responseHandler, serviceRegistry);
+            return new Server(port, maxCapacity, serverName, serverId, responseHandler, serviceRegistry);
         }
     }
 
@@ -145,14 +136,18 @@ public class Server {
         }
     }
 
-    private void registerService() {
+    private void registerService() throws Exception {
         Service service = new Service();
         service.setId(serverId);
         service.setName(serverName);
         service.setAddress(getLocalIp());
         service.setPort(port);
-        service.setTtl(ttl);
-        serviceRegistry.register(service);
+        service.setTtl(serviceRegistry.getTTL());
+        try {
+            serviceRegistry.register(service);
+        } catch (Exception e) {
+            log.error("register service {} error! {}", service, e);
+        }
     }
 
     private String getLocalIp() {
@@ -165,6 +160,9 @@ public class Server {
     }
 
     public void shutdown() {
+        if (serviceRegistry != null) {
+            serviceRegistry.close();
+        }
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
     }

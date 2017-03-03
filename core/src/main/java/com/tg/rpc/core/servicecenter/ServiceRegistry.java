@@ -9,7 +9,11 @@ package com.tg.rpc.core.servicecenter;
  */
 public interface ServiceRegistry {
 
-    void register(Service service);
+    void register(Service service) throws Exception;
 
-    void unregister(Service service);
+    void unregister(Service service) throws Exception;
+
+    long getTTL();
+
+    void close();
 }

@@ -10,7 +10,11 @@ import java.util.List;
  * @since 2017-02-28
  */
 public interface ServiceDiscovery {
-    List<Service> discover(String serviceId);
+    /*
+    consul通过servicename拿一组服务列表,
+    zookeeper通过serviceid拿一组服务
+     */
+    List<Service> discover(String serviceName) throws Exception;
 
-    void addListener(String serviceName,ServiceChangeHandler handler);
+    void addListener(String serviceName,ServiceChangeHandler handler) throws Exception;
 }

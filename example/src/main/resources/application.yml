@@ -1,6 +1,6 @@
 tgrpc:
     host: 127.0.0.1
-    port: 9100
+    port: 9001
     registery: consul
     ttl: 8000
     maxCapacity: 3

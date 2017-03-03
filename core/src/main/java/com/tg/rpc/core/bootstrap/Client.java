@@ -198,7 +198,12 @@ public class Client {
     private void init() {
         if (serviceDiscovery != null) {
             log.info("Registry mode! service discover...");
-            List<Service> serviceList = serviceDiscovery.discover(serverName);
+            List<Service> serviceList = null;
+            try {
+                serviceList = serviceDiscovery.discover(serverName);
+            } catch (Exception e) {
+                log.error("discovery service error:{}", e);
+            }
             for (Service service : serviceList) {
                 addChannel(service);
             }
@@ -209,20 +214,24 @@ public class Client {
                 }
             };
 
-            serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
-                @Override
-                public void handle(List<Service> services) {
-                    List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
-                    List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
-                    log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
-                    for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
-                        removeChannel(channelPoolWrapper);
+            try {
+                serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
+                    @Override
+                    public void handle(List<Service> services) {
+                        List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
+                        List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
+                        log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
+                        for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
+                            removeChannel(channelPoolWrapper);
+                        }
+                        for (Service service : shouldAdded) {
+                            addChannel(service);
+                        }
                     }
-                    for (Service service : shouldAdded) {
-                        addChannel(service);
-                    }
-                }
-            });
+                });
+            } catch (Exception e) {
+                log.error("serviceDiscovery set listener error:{}", e);
+            }
         } else {
             addChannel(host, port);
         }

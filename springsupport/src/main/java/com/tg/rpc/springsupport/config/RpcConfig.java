@@ -22,13 +22,16 @@ public class RpcConfig {
     private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
     private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
 
-    private String consulHost = ConfigConstant.DEFAULT_CONSUL_HOST;
-    private int consulPort = ConfigConstant.DEFAULT_CONSUL_PORT;
+    private String consulHost = ConfigConstant.DEFAULT_REGISTRY_HOST;
+    private int consulPort = ConfigConstant.DEFAULT_REGISTRY_PORT;
+    private long ttl = ConfigConstant.DEFAULT_TTL;
     private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
     private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
-    private long ttl = ConfigConstant.DEFAULT_TTL;
+    private String zookeeperHost = ConfigConstant.DEFAULT_ZOOKEEPER_HOST;
+    private int zookeeperPort = ConfigConstant.DEFAULT_ZOOKEEPER_PORT;
+    private String zkServicePath = ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH;
 
-    private String registery= Registry.DEFAULT.value();
+    private String registery = Registry.DEFAULT.value();
 
     public String getHost() {
         return host;
@@ -140,5 +143,37 @@ public class RpcConfig {
 
     public void setRegistery(String registery) {
         this.registery = registery;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
+    }
+
+    public String getZkServicePath() {
+        return zkServicePath;
+    }
+
+    public void setZkServicePath(String zkServicePath) {
+        this.zkServicePath = zkServicePath;
+    }
+
+    public String getZookeeperHost() {
+        return zookeeperHost;
+    }
+
+    public void setZookeeperHost(String zookeeperHost) {
+        this.zookeeperHost = zookeeperHost;
+    }
+
+    public int getZookeeperPort() {
+        return zookeeperPort;
+    }
+
+    public void setZookeeperPort(int zookeeperPort) {
+        this.zookeeperPort = zookeeperPort;
     }
 }
