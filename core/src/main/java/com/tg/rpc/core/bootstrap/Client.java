@@ -218,6 +218,7 @@ public class Client {
                 serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
                     @Override
                     public void handle(List<Service> services) {
+                        log.debug("execute listener :cache:{}, nowservices:{}", channelPoolWrappers, services);
                         List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
                         List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
                         log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);

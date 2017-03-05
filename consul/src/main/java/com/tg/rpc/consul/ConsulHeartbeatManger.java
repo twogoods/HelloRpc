@@ -17,7 +17,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConsulHeartbeatManger {
 
-    private static final Logger log= LoggerFactory.getLogger(ConsulHeartbeatManger.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsulHeartbeatManger.class);
+    private static final int requestTimeLoss = 1000;
 
     private ConsulEcwidClient consulEcwidClient;
     private Service service;
@@ -37,14 +38,14 @@ public class ConsulHeartbeatManger {
     }
 
     public void start() {
-        if(service!=null){
+        if (service != null) {
             heartbeatExecutor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     log.debug("send heartbeat...");
                     consulEcwidClient.checkPass(service.getId());
                 }
-            }, service.getTtl(), service.getTtl(), TimeUnit.MILLISECONDS);
+            }, 0, service.getTtl() - requestTimeLoss, TimeUnit.MILLISECONDS);
         }
     }
 }

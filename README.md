@@ -112,6 +112,25 @@ public class ClientApplication {
     }
 }
 ```
+
+### 注册中心
+可以使用consul,或者zookeeper作为注册中心.使用非常简单,只需在配置文件中配置`registery`属性,取值有default(默认),consul,zookeeper
+
+```
+tgrpc:
+    port: 9001
+    registery: zookeeper
+    zookeeperHost: 127.0.0.1
+    zookeeperPort: 2181
+    zkServicePath: /tgrpc/services
+
+tgrpc:
+    port: 9001
+    registery: consul
+    consulHost: 127.0.0.1
+    consulPort: 8500
+    ttl: 10000
+
+```
 ### TODO
-- 服务注册与发现(Zookeeper,Consul)
 - netty优化

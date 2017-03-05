@@ -29,7 +29,6 @@ public class ConsulRegistry implements ServiceRegistry {
     @Override
     public void register(Service service) {
         consulEcwidClient.registerService(service);
-        consulEcwidClient.checkPass(service.getId());
         consulHeartbeatManger.setHeartbeatService(service);
         consulHeartbeatManger.start();
     }
