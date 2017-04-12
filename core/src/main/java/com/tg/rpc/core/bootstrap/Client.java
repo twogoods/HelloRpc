@@ -52,6 +52,9 @@ public class Client {
 
     private CopyOnWriteArrayList<ChannelPoolWrapper> channelPoolWrappers = new CopyOnWriteArrayList();
 
+    EventLoopGroup group;
+    Bootstrap b;
+
     private AtomicLong atomicLong = new AtomicLong(100000);
 
     public Client(String host, int port) {
@@ -150,31 +153,34 @@ public class Client {
             client.minIdle = this.minIdle;
             client.borrowMaxWaitMillis = this.borrowMaxWaitMillis;
             client.serviceDiscovery = serviceDiscovery;
+            client.preInit();
             client.init();
             return client;
         }
     }
 
+    public void preInit() {
+        //TODO NioEventLoopGroup里线程复用后设置合适的线程数.默认是cpu数的2倍,根据maxTotal的值适当选取
+        group = new NioEventLoopGroup();
+        b = new Bootstrap();
+        b.group(group).channel(NioSocketChannel.class)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, borrowMaxWaitMillis)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new ProtocolDecoder(maxCapacity * 1024 * 1024))
+                                .addLast(new ProtocolEncoder())
+                                .addLast(new LoggingHandler(LogLevel.DEBUG))
+                                .addLast(new ClientChannelHandler());
+                    }
+                });
+    }
+
     public Channel initConnection(String host, int port) {
         try {
-            EventLoopGroup group = new NioEventLoopGroup();
-            Bootstrap b = new Bootstrap();
-            b.group(group).channel(NioSocketChannel.class)
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, borrowMaxWaitMillis)
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new ProtocolDecoder(maxCapacity * 1024 * 1024))
-                                    .addLast(new ProtocolEncoder())
-                                    .addLast(new LoggingHandler(LogLevel.DEBUG))
-                                    .addLast(new ClientChannelHandler());
-                        }
-                    });
             log.info("client try to connection {}:{}", host, port);
-            //TODO 复用问题 http://www.cnblogs.com/kaiblog/p/5372728.html
             ChannelFuture f = b.connect(host, port).sync();
-
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
@@ -196,45 +202,46 @@ public class Client {
     }
 
     private void init() {
-        if (serviceDiscovery != null) {
-            log.info("Registry mode! service discover...");
-            List<Service> serviceList = null;
-            try {
-                serviceList = serviceDiscovery.discover(serverName);
-            } catch (Exception e) {
-                log.error("discovery service error:{}", e);
-            }
-            for (Service service : serviceList) {
-                addChannel(service);
-            }
-            final Comparable<ChannelPoolWrapper, Service> comparable = new Comparable<ChannelPoolWrapper, Service>() {
-                @Override
-                public boolean equals(ChannelPoolWrapper channelPoolWrapper, Service service) {
-                    return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
-                }
-            };
-
-            try {
-                serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
-                    @Override
-                    public void handle(List<Service> services) {
-                        log.debug("execute listener :cache:{}, nowservices:{}", channelPoolWrappers, services);
-                        List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
-                        List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
-                        log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
-                        for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
-                            removeChannel(channelPoolWrapper);
-                        }
-                        for (Service service : shouldAdded) {
-                            addChannel(service);
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                log.error("serviceDiscovery set listener error:{}", e);
-            }
-        } else {
+        if (serviceDiscovery == null) {
             addChannel(host, port);
+            return;
+        }
+
+        log.info("Registry mode! service discover...");
+        List<Service> serviceList = null;
+        try {
+            serviceList = serviceDiscovery.discover(serverName);
+        } catch (Exception e) {
+            log.error("discovery service error:{}", e);
+        }
+        for (Service service : serviceList) {
+            addChannel(service);
+        }
+        final Comparable<ChannelPoolWrapper, Service> comparable = new Comparable<ChannelPoolWrapper, Service>() {
+            @Override
+            public boolean equals(ChannelPoolWrapper channelPoolWrapper, Service service) {
+                return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+            }
+        };
+
+        try {
+            serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
+                @Override
+                public void handle(List<Service> services) {
+                    log.debug("execute listener :cache:{}, nowservices:{}", channelPoolWrappers, services);
+                    List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
+                    List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
+                    log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
+                    for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
+                        removeChannel(channelPoolWrapper);
+                    }
+                    for (Service service : shouldAdded) {
+                        addChannel(service);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            log.error("serviceDiscovery set listener error:{}", e);
         }
     }
 

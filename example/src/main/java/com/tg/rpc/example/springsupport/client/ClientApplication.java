@@ -21,6 +21,5 @@ public class ClientApplication {
         ServiceCall serviceCall = (ServiceCall) applicationContext.getBean("serviceCall");
         System.out.println("echo return :" + serviceCall.echo("TgRPC"));
         System.out.println("4 + 5 = " + serviceCall.add(4, 5));
-
     }
 }
