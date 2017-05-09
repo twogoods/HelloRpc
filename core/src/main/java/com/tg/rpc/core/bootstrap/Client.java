@@ -258,9 +258,8 @@ public class Client {
         channelPoolWrappers.remove(channelPoolWrapper);
     }
 
-
     private ChannelPoolWrapper selectChannel() {
-        //TODO 支持多种方式
+        //TODO 负载均衡算法、轮询、权重、hash、一致性哈希
         Random random = new Random();
         int size = channelPoolWrappers.size();
         if (size < 1) {
