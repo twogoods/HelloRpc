@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(RpcConfig.class)
 public class RpcClientAutoConfiguration {
 
-
     private final RpcConfig rpcConfig;
 
     public RpcClientAutoConfiguration(RpcConfig rpcConfig) {

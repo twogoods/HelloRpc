@@ -44,7 +44,6 @@ public class ConsulDiscovery implements ServiceDiscovery {
         thread.start();
     }
 
-
     private class ServiceLookupThread extends Thread {
         private ServiceChangeHandler handler;
         private String serviceName;

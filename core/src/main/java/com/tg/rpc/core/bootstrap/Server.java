@@ -123,7 +123,6 @@ public class Server {
             log.info("Server start success, in port:{}", port);
             if (serviceRegistry != null) {
                 registerService();
-                log.info("Server register success.");
             }
             channelFuture.channel().closeFuture().addListener(new ChannelFutureListener() {
                 @Override
@@ -145,6 +144,7 @@ public class Server {
         service.setTtl(serviceRegistry.getTTL());
         try {
             serviceRegistry.register(service);
+            log.info("Server register success.");
         } catch (Exception e) {
             log.error("register service {} error! {}", service, e);
         }

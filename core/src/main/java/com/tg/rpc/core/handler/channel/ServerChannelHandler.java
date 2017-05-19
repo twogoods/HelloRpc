@@ -21,14 +21,14 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
-        Response response = responseHandler.handle(request);
-        log.debug("server get request:{}, return response:{}", request, response);
-        channelHandlerContext.pipeline().writeAndFlush(response);
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("{} in channel:{}", cause, ctx.channel());
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("{} in channel:{}", cause, ctx.channel());
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
+        Response response = responseHandler.handle(request);
+        log.debug("server get request:{}, return response:{}", request, response);
+        channelHandlerContext.pipeline().writeAndFlush(response);
     }
 }

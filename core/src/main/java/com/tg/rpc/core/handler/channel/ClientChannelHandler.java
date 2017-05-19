@@ -17,14 +17,15 @@ public class ClientChannelHandler extends SimpleChannelInboundHandler<Response> 
     private static Logger log = LoggerFactory.getLogger(ClientChannelHandler.class);
 
     @Override
-    protected void messageReceived(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("error in channel:{} {}",ctx.channel(),cause);
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
         BlockingQueue<Response> blockingQueue = QueueHolder.get(response.getRequestId());
         if (blockingQueue != null) {
             blockingQueue.put(response);
         }
-    }
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("error in channel:{} {}",ctx.channel(),cause);
     }
 }
