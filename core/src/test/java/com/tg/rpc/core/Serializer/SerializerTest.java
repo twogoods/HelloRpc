@@ -15,20 +15,28 @@ public class SerializerTest {
     Serializer protostuff = new ProtostuffSerializer();
 
     @Test
+    public void testPOJO() throws Exception {
+        User u=new User(10);
+        byte[] bytes = protostuff.serialize(u);
+        User2 result = protostuff.deserialize(bytes, User2.class);
+        System.out.println(result);
+    }
+
+    @Test
     public void testKry() throws Exception {
         Map<String, Object> map = new HashMap<>();
         map.put("name", "twogoods");
         map.put("age", 11);
 
-        long start=System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         byte[] bytes = kry.serialize(map);
         System.out.println(bytes.length);
 
         HashMap<String, Object> result = kry.deserialize(bytes, HashMap.class);
         System.out.println(result);
-        long end =System.currentTimeMillis();
-        System.out.println("time:  "+(end-start));
+        long end = System.currentTimeMillis();
+        System.out.println("time:  " + (end - start));
 
     }
 
@@ -39,11 +47,11 @@ public class SerializerTest {
         map.put("name", "twogoods");
         map.put("age", 11);
 
-        User u=new User();
+        User u = new User();
         u.setId(1);
         u.setItem(map);
 
-        long start=System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         byte[] bytes = protostuff.serialize(u);
         System.out.println(bytes.length);
 
@@ -53,20 +61,20 @@ public class SerializerTest {
 //        HashMap<String, Object> result = protostuff.deserialize(bytes, User.class);
         User result = protostuff.deserialize(bytes, User.class);
         System.out.println(result);
-        long end =System.currentTimeMillis();
-        System.out.println("time:  "+(end-start));
+        long end = System.currentTimeMillis();
+        System.out.println("time:  " + (end - start));
 
     }
 
     @Test
-    public void mapCast(){
+    public void mapCast() {
         Map<String, Object> map = new HashMap<>();
         map.put("name", "twogoods");
         map.put("age", 11);
 
-        Object obj=map;
+        Object obj = map;
 
-        Map<String,String> another= (Map<String, String>) obj;
+        Map<String, String> another = (Map<String, String>) obj;
         System.out.println(another);
     }
 }

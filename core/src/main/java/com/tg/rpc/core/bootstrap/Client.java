@@ -169,7 +169,7 @@ public class Client {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new ProtocolDecoder(maxCapacity * 1024 * 1024))
+                        ch.pipeline().addLast(ProtocolDecoder.clientDecoder(maxCapacity * 1024 * 1024))
                                 .addLast(new ProtocolEncoder())
                                 .addLast(new LoggingHandler(LogLevel.DEBUG))
                                 .addLast(new ClientChannelHandler());

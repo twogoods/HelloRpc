@@ -27,6 +27,7 @@ public class KryoSerializer implements Serializer{
 
     @Override
     public <T> T deserialize(byte[] bytes,Class<T> clazz) {
+        //注意这里反序列化不需要clazz,kryo自己就能反序列化到原先的类
         Kryo kryo = new Kryo();
         ByteArrayInputStream byteInputStream = new ByteArrayInputStream(bytes);
         Input input = new Input(byteInputStream);
