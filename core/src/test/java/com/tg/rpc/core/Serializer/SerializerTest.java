@@ -16,9 +16,9 @@ public class SerializerTest {
 
     @Test
     public void testPOJO() throws Exception {
-        User u=new User(10);
+        User u = new User(10);
         byte[] bytes = protostuff.serialize(u);
-        User2 result = protostuff.deserialize(bytes, User2.class);
+        User result = protostuff.deserialize(bytes, User.class);
         System.out.println(result);
     }
 

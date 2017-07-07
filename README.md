@@ -133,5 +133,5 @@ tgrpc:
 
 ```
 ### TODO
-- 服务分组、版本号
+- 超时与重试、限流(server)、降级开关(server)、熔断(client)、异步编程、监控、服务分组
 - netty优化
