@@ -13,18 +13,13 @@ public class JdkClientProxy extends AbstractClientProxy {
         super(interceptor);
     }
 
-    @Override
-    public <T> T getProxy(Class<T> serviceInterface) {
-        return getProxy(serviceInterface,null);
-    }
-
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T getProxy(final Class<T> serviceInterface,final String serviceName) {
+    public <T> T getProxy(final Class<T> serviceInterface) {
         return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{serviceInterface}, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                return interceptor.invoke(method, args, serviceInterface, serviceName);
+                return interceptor.invoke(method, args, serviceInterface);
             }
         });
     }

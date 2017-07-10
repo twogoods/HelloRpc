@@ -73,7 +73,6 @@ public class RpcClientAutoConfiguration {
     private Client clientWithConsul() {
         ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery(rpcConfig.getConsulHost(), rpcConfig.getConsulPort());
         return new Client.Builder().serviceDiscovery(serviceDiscovery)
-                .serverName(rpcConfig.getServerName())
                 .maxCapacity(rpcConfig.getMaxCapacity())
                 .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
                 .connectionMaxTotal(rpcConfig.getMaxTotal())
@@ -86,7 +85,6 @@ public class RpcClientAutoConfiguration {
     private Client clientWithZookeeper() {
         ServiceDiscovery serviceDiscovery = ZookeeperCompentFactory.getDiscovery(rpcConfig.getZookeeperHost(), rpcConfig.getZookeeperPort(), rpcConfig.getZkServicePath());
         return new Client.Builder().serviceDiscovery(serviceDiscovery)
-                .serverName(rpcConfig.getServerName())
                 .maxCapacity(rpcConfig.getMaxCapacity())
                 .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
                 .connectionMaxTotal(rpcConfig.getMaxTotal())

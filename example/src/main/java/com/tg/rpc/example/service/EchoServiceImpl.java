@@ -10,6 +10,11 @@ import com.tg.rpc.springsupport.annotation.RpcService;
 public class EchoServiceImpl implements EchoService {
     @Override
     public String echo(String s) {
+//        try {
+//            Thread.sleep(3000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         return s;
     }
 }

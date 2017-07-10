@@ -1,5 +1,6 @@
 package com.tg.rpc.example.single;
 
+import com.tg.rpc.core.config.ClientProperty;
 import com.tg.rpc.core.proxy.DefaultClientInterceptor;
 import com.tg.rpc.example.service.TestService;
 import com.tg.rpc.core.bootstrap.Client;
@@ -13,7 +14,21 @@ import com.tg.rpc.example.service.EchoService;
  */
 public class ClientBootstrap {
     public static void main(String[] args) throws Exception {
-        Client client = new Client.Builder().host("127.0.0.1").port(9001).maxCapacity(3).build();
+        ClientProperty clientA = new ClientProperty();
+        clientA.setName("A")
+                .setProviderList("127.0.0.1:9001")
+                .setInterfaces("com.tg.rpc.example.service.EchoService");
+        ClientProperty clientB = new ClientProperty();
+        clientB.setName("B")
+                .setProviderList("127.0.0.1:9001")
+                .setInterfaces("com.tg.rpc.example.service.TestService");
+        Client client = new Client.Builder().host("127.0.0.1")
+                .port(9001)
+                .maxCapacity(3)
+                .requestTimeoutMillis(3500)
+                .client(clientA)
+                .client(clientB)
+                .build();
         DefaultClientInterceptor interceptor = new DefaultClientInterceptor(client);
         ClientProxy clientProxy = new JdkClientProxy(interceptor);
 
@@ -23,5 +38,6 @@ public class ClientBootstrap {
         TestService testService = clientProxy.getProxy(TestService.class);
         System.out.println(testService.add(2, 5));
 
+        System.out.println(echoService.echo("twogoods"));
     }
 }

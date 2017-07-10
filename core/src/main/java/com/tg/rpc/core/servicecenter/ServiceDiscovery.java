@@ -13,5 +13,5 @@ public interface ServiceDiscovery {
 
     List<Service> discover(String serviceName) throws Exception;
 
-    void addListener(String serviceName,ServiceChangeHandler handler) throws Exception;
+    void addListener(String serviceName, ServiceChangeHandler handler) throws Exception;
 }

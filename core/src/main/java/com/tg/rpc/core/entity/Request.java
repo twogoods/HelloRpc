@@ -12,7 +12,6 @@ import java.util.Arrays;
  */
 public class Request {
     private long requestId;
-    private String serviceName;
     private Class<?> clazz;
     private String method;
     private Class<?>[] parameterTypes;
@@ -22,12 +21,11 @@ public class Request {
     public Request() {
     }
 
-    public Request(Class<?> clazz, String method, Class<?>[] parameterTypes, Object[] params, String serviceName) {
+    public Request(Class<?> clazz, String method, Class<?>[] parameterTypes, Object[] params) {
         this.clazz = clazz;
         this.method = method;
         this.parameterTypes = parameterTypes;
         this.params = params;
-        this.serviceName = serviceName;
     }
 
     public long getRequestId() {
@@ -36,14 +34,6 @@ public class Request {
 
     public void setRequestId(long requestId) {
         this.requestId = requestId;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
     }
 
     public Class<?> getClazz() {
@@ -90,7 +80,6 @@ public class Request {
     public String toString() {
         return "Request{" +
                 "requestId=" + requestId +
-                ", serviceName='" + serviceName + '\'' +
                 ", clazz=" + clazz +
                 ", method='" + method + '\'' +
                 ", parameterTypes=" + Arrays.toString(parameterTypes) +

@@ -31,7 +31,7 @@ public class SpringBeanResponseHandler implements ResponseHandler, BeanFactoryAw
 
     @Override
     public Response handle(Request request) {
-        String serviceName = request.getServiceName();
+        String serviceName = request.getClazz().getSimpleName();
         Object serviceImplObj;
         //TODO serviceName没起到作用
         if (StringUtils.isEmpty(serviceName)) {

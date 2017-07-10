@@ -4,6 +4,7 @@ import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.entity.ResponseCodeConstant;
 import com.tg.rpc.core.exception.ServiceInvokeException;
+import com.tg.rpc.core.exception.ServiceInvokeTimeOutException;
 
 import java.lang.reflect.Method;
 
@@ -22,10 +23,12 @@ public class DefaultClientInterceptor implements MethodInterceptor {
     }
 
     @Override
-    public Object invoke(Method method, Object[] args, Class clazz, String serviceName) throws Throwable {
-        Response response = client.sendRequest(method, args, clazz,serviceName);
+    public Object invoke(Method method, Object[] args, Class clazz) throws Throwable {
+        //TODO client发起的调用，限制调用频率，熔断
+        //breaker的配置
+        Response response = client.sendRequest(method, args, clazz);
         if(response==null){
-            throw new ServiceInvokeException("response timout!!! server return nothing");
+            throw new ServiceInvokeTimeOutException("response timout");
         }
         if(response.getCode()== ResponseCodeConstant.SERVICE_NOT_FIND){
             throw new ServiceInvokeException("server can not find ServiceImpl, please check you implements service");

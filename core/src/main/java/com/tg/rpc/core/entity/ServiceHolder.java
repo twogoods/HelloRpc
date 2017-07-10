@@ -31,7 +31,7 @@ public class ServiceHolder {
             throw new ValidateException(String.format("Object(%s) did't implements %s",
                     serviceImpl.getClass(), serviceInterface.getName()));
         }
-        serviceMap.put(WordUtils.uncapitalize(serviceInterface.getSimpleName()), serviceImpl);
+        serviceMap.put(serviceInterface.getName(), serviceImpl);
     }
 
     public static void addService(Class implClazz) throws Exception {
@@ -40,7 +40,7 @@ public class ServiceHolder {
             throw new ValidateException("serviceImpl implements many interfaces, so change to use method: addService(Class serviceInterface, Object serviceImpl)");
         }
         try {
-            serviceMap.put(WordUtils.uncapitalize(interfaces[0].getSimpleName()), implClazz.newInstance());
+            serviceMap.put(interfaces[0].getName(), implClazz.newInstance());
         } catch (InstantiationException e) {
             log.error("InstantiationException! change to use method: addService(Class serviceInterface, Object serviceImpl)");
             throw e;
@@ -51,10 +51,10 @@ public class ServiceHolder {
     }
 
     public static Object get(Request request) {
-        if (!StringUtils.isEmpty(request.getServiceName())) {
-            return serviceMap.get(request.getServiceName());
+        if (request.getClazz() != null) {
+            return serviceMap.get(request.getClazz().getName());
         }
-        return serviceMap.get(WordUtils.uncapitalize(request.getClazz().getSimpleName()));
+        return null;
     }
 
 }

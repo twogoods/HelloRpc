@@ -6,7 +6,4 @@ package com.tg.rpc.core.proxy;
  */
 public interface ClientProxy {
     <T> T getProxy(Class<T> serviceInterface);
-
-    <T> T getProxy(Class<T> serviceInterface, String serviceName);
-
 }

@@ -17,17 +17,12 @@ public class CglibClientProxy extends AbstractClientProxy {
     }
 
     @Override
-    public <T> T getProxy(Class<T> serviceInterface) {
-        return getProxy(serviceInterface,null);
-    }
-
-    @Override
-    public <T> T getProxy(final Class<T> serviceInterface, final String serviceName) {
+    public <T> T getProxy(final Class<T> serviceInterface) {
         enhancer.setSuperclass(serviceInterface);
         enhancer.setCallback(new MethodInterceptor() {
             @Override
             public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                return interceptor.invoke(method, args, serviceInterface, serviceName);
+                return interceptor.invoke(method, args, serviceInterface);
             }
         });
         return (T) enhancer.create();

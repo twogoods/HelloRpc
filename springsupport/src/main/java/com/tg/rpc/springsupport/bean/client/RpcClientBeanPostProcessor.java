@@ -11,7 +11,8 @@ import java.lang.reflect.Field;
 
 /**
  * Description:
- *   为service接口对象提供代理实现
+ * 为service接口对象提供代理实现
+ *
  * @author twogoods
  * @version 0.1
  * @since 2017-02-01
@@ -39,7 +40,7 @@ public class RpcClientBeanPostProcessor implements BeanPostProcessor {
                     if (!f.isAccessible()) {
                         f.setAccessible(true);
                     }
-                    f.set(bean, clientProxy.getProxy(f.getType(), rpcReferer.name()));
+                    f.set(bean, clientProxy.getProxy(f.getType()));
                 }
             } catch (Exception e) {
                 throw new BeanInitializationException(

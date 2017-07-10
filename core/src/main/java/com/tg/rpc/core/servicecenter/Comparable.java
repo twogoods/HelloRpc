@@ -7,6 +7,7 @@ package com.tg.rpc.core.servicecenter;
  * @version 0.1
  * @since 2017-03-01
  */
+@FunctionalInterface
 public interface Comparable<A, B> {
     boolean equals(A a, B b);
 }

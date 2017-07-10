@@ -23,10 +23,11 @@ public class DefaultResponseHandler implements ResponseHandler {
         response.setRequestId(request.getRequestId());
         if (serviceimpl != null) {
             try {
+                //TOOD 方法做缓存，提性能
                 Method method = serviceimpl.getClass().getMethod(request.getMethod(), request.getParameterTypes());
                 response.setReturnObj(method.invoke(serviceimpl, request.getParams()));
             } catch (Exception e) {
-                log.error("server method invoke error! request:{}",request);
+                log.error("server method invoke error! request:{}", request);
                 response.setCode(ResponseCodeConstant.INTERNAL_ERROR);
             }
         } else {

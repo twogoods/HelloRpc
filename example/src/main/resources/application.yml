@@ -1,11 +1,27 @@
 tgrpc:
-    host: 127.0.0.1
-    port: 9001
-    registery: consul
-    ttl: 8000
-    maxCapacity: 3
-    requestTimeoutMillis: 8000
-    maxTotal: 3
-    maxIdle: 3
-    minIdle: 0
-    borrowMaxWaitMillis: 5000
+    server:
+        host: 127.0.0.1
+        port: 9001
+        registery: consul
+        ttl: 8000
+        maxCapacity: 3
+        requestTimeoutMillis: 8000
+        maxTotal: 3
+        maxIdle: 3
+        minIdle: 0
+        borrowMaxWaitMillis: 5000
+
+    client:
+        registery: consul
+        clients:
+            - name: default_rpc
+              requestTimeoutMillis: 2000
+              interfaces: com.tg.rpc.example.service.EchoService
+              providerList: 127.0.0.1:8080
+              registery: consul
+              maxCapacity: 3
+              maxTotal: 3
+              maxIdle: 3
+              minIdle: 0
+              borrowMaxWaitMillis: 5000
+

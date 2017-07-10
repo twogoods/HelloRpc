@@ -9,6 +9,6 @@ import com.tg.rpc.springsupport.annotation.RpcService;
 public class TestServiceImpl implements TestService {
     @Override
     public int add(int a, int b) {
-        return a+b;
+        return a + b;
     }
 }

@@ -2,6 +2,7 @@ package com.tg.rpc.core.bootstrap;
 
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
+import com.tg.rpc.core.config.ClientProperty;
 import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
@@ -22,9 +23,12 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Random;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -37,29 +41,26 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Client {
     private static final Logger log = LoggerFactory.getLogger(Client.class);
 
-    private String host;
-    private int port;
     private int maxCapacity;
     private int requestTimeoutMillis;
-
+    //TODO 连接池配置改掉
     private int maxTotal;
     private int maxIdle;
     private int minIdle;
     private int borrowMaxWaitMillis;
+    private List<ClientProperty> clients = new ArrayList<>();
 
-    private String serverName;
     private ServiceDiscovery serviceDiscovery;
 
-    private CopyOnWriteArrayList<ChannelPoolWrapper> channelPoolWrappers = new CopyOnWriteArrayList();
+    private Map<String, CopyOnWriteArrayList<ChannelPoolWrapper>> clientPools = new HashMap<>();
 
     EventLoopGroup group;
     Bootstrap b;
 
-    private AtomicLong atomicLong = new AtomicLong(100000);
+    //TODO 多个client 不是全局唯一的
+    private AtomicLong requestId = new AtomicLong(100000);
 
-    public Client(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public Client() {
     }
 
     public Client(ServiceDiscovery serviceDiscovery) {
@@ -72,12 +73,12 @@ public class Client {
         private ServiceDiscovery serviceDiscovery;
         private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
         private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;
-        private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
 
         private int maxTotal = ConfigConstant.DEFAULT_POOL_MAXTOTAL;
         private int maxIdle = ConfigConstant.DEFAULT_POOL_MAXIDLE;
         private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
         private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
+        private List<ClientProperty> clients = new ArrayList<>();
 
         public Client.Builder host(String host) {
             this.host = host;
@@ -91,11 +92,6 @@ public class Client {
 
         public Client.Builder maxCapacity(int maxCapacity) {
             this.maxCapacity = maxCapacity;
-            return this;
-        }
-
-        public Client.Builder serverName(String serverName) {
-            this.serverName = serverName;
             return this;
         }
 
@@ -129,6 +125,16 @@ public class Client {
             return this;
         }
 
+        public Client.Builder client(ClientProperty clientProperty) {
+            this.clients.add(clientProperty);
+            return this;
+        }
+
+        public Client.Builder clients(List<ClientProperty> clients) {
+            this.clients.addAll(clients);
+            return this;
+        }
+
         public Client build() {
             Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
             Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
@@ -142,17 +148,16 @@ public class Client {
                 Validate.notNull(serviceDiscovery, "no host and port, so serviceDiscovery can't be null");
                 client = new Client(serviceDiscovery);
             } else {
-                Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
-                client = new Client(host, port);
+                client = new Client();
             }
-            client.maxCapacity = maxCapacity;
+            client.maxCapacity = this.maxCapacity;
             client.requestTimeoutMillis = this.requestTimeoutMillis;
-            client.serverName = serverName;
             client.maxTotal = this.maxTotal;
             client.maxIdle = this.maxIdle;
             client.minIdle = this.minIdle;
             client.borrowMaxWaitMillis = this.borrowMaxWaitMillis;
-            client.serviceDiscovery = serviceDiscovery;
+            client.serviceDiscovery = this.serviceDiscovery;
+            client.clients = this.clients;
             client.preInit();
             client.init();
             return client;
@@ -201,66 +206,93 @@ public class Client {
         return null;
     }
 
-    private void init() {
-        if (serviceDiscovery == null) {
-            addChannel(host, port);
-            return;
-        }
+    private Map<String, String> serviceCache = new HashMap<>();
 
-        log.info("Registry mode! service discover...");
-        List<Service> serviceList = null;
-        try {
-            serviceList = serviceDiscovery.discover(serverName);
-        } catch (Exception e) {
-            log.error("discovery service error:{}", e);
-        }
-        for (Service service : serviceList) {
-            addChannel(service);
-        }
-        final Comparable<ChannelPoolWrapper, Service> comparable = new Comparable<ChannelPoolWrapper, Service>() {
-            @Override
-            public boolean equals(ChannelPoolWrapper channelPoolWrapper, Service service) {
-                return channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+    private void parseClientProperty(ClientProperty clientProperty) {
+        clientProperty.getInterfaces().forEach(iface -> serviceCache.put(iface, clientProperty.getName()));
+    }
+
+    private void initPoolMap() {
+        clients.forEach(clientProperty -> {
+            clientPools.put(clientProperty.getName(), new CopyOnWriteArrayList<>());
+        });
+    }
+
+    private void initChannelInDefaultMode() {
+        clients.forEach(clientProperty -> {
+            parseClientProperty(clientProperty);
+            addChannel(clientProperty);
+        });
+    }
+
+    private void initChannelInRegistryMode() {
+        for (ClientProperty clientProperty : clients) {
+            List<Service> serviceList = null;
+            try {
+                serviceList = serviceDiscovery.discover(clientProperty.getName());
+            } catch (Exception e) {
+                log.error("discovery service error:{}", e);
+                continue;
             }
-        };
-
-        try {
-            serviceDiscovery.addListener(serverName, new ServiceChangeHandler() {
-                @Override
-                public void handle(List<Service> services) {
-                    log.debug("execute listener :cache:{}, nowservices:{}", channelPoolWrappers, services);
+            serviceList.forEach(service -> addChannel(service));
+            final Comparable<ChannelPoolWrapper, Service> comparable = (ChannelPoolWrapper channelPoolWrapper, Service service)
+                    -> channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+            try {
+                serviceDiscovery.addListener(clientProperty.getName(), services -> {
+                    List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(clientProperty.getName());
+                    log.debug("execute listener :cache:{}, nowservices:{}", clientPools.get(clientProperty.getName()), services);
                     List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
                     List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
                     log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
                     for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
-                        removeChannel(channelPoolWrapper);
+                        removeChannel(clientProperty.getName(), channelPoolWrapper);
                     }
                     for (Service service : shouldAdded) {
                         addChannel(service);
                     }
-                }
-            });
-        } catch (Exception e) {
-            log.error("serviceDiscovery set listener error:{}", e);
+                });
+            } catch (Exception e) {
+                log.error("serviceDiscovery set listener error:{}", e);
+            }
         }
     }
 
+    private void init() {
+        initPoolMap();
+        if (serviceDiscovery == null) {
+            initChannelInDefaultMode();
+            return;
+        }
+        initChannelInRegistryMode();
+        log.info("Registry mode! service discover done.");
+    }
+
     private void addChannel(Service service) {
-        channelPoolWrappers.add(new ChannelPoolWrapper(this, service.getAddress(), service.getPort()));
+        clientPools.get(service.getName()).add(new ChannelPoolWrapper(this, service.getAddress(), service.getPort()));
     }
 
-    private void addChannel(String host, int port) {
-        channelPoolWrappers.add(new ChannelPoolWrapper(this, host, port));
+    private static final String HTTP_PROTOCOL = "http://";
+
+    private void addChannel(ClientProperty clientProperty) {
+        clientProperty.getProviderList().forEach(provider -> {
+            try {
+                URL providerUrl = new URL(HTTP_PROTOCOL + provider);
+                clientPools.get(clientProperty.getName()).add(new ChannelPoolWrapper(this, providerUrl.getHost(), providerUrl.getPort()));
+            } catch (MalformedURLException e) {
+                log.error("providerList parse error, origin content :{}", provider);
+            }
+        });
     }
 
-    private void removeChannel(ChannelPoolWrapper channelPoolWrapper) {
+    private void removeChannel(String serviceName, ChannelPoolWrapper channelPoolWrapper) {
         channelPoolWrapper.close();
-        channelPoolWrappers.remove(channelPoolWrapper);
+        clientPools.get(serviceName).remove(channelPoolWrapper);
     }
 
-    private ChannelPoolWrapper selectChannel() {
+    private ChannelPoolWrapper selectChannel(String serviceName) {
         //TODO 负载均衡算法、轮询、权重、hash、一致性哈希
         Random random = new Random();
+        List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(serviceName);
         int size = channelPoolWrappers.size();
         if (size < 1) {
             return null;
@@ -269,18 +301,18 @@ public class Client {
         return channelPoolWrappers.get(i);
     }
 
-    public Response sendRequest(Method method, Object[] args, Class clazz, String serviceName) throws Exception {
-        Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args, serviceName);
-        request.setRequestId(atomicLong.incrementAndGet());
-        ChannelPoolWrapper channelPoolWrapper = selectChannel();
+    public Response sendRequest(Method method, Object[] args, Class clazz) throws Exception {
+        Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args);
+        request.setRequestId(requestId.incrementAndGet());
+        ChannelPoolWrapper channelPoolWrapper = selectChannel(serviceCache.get(clazz.getName()));
         Channel channel = channelPoolWrapper.getObject();
         if (channel == null) {
             Validate.notNull(channel, "can't get channel from pool");
         }
+        BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
+        QueueHolder.put(request.getRequestId(), blockingQueue);
+        channel.writeAndFlush(request);
         try {
-            channel.writeAndFlush(request);
-            BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
-            QueueHolder.put(request.getRequestId(), blockingQueue);
             Response response = blockingQueue.poll(requestTimeoutMillis, TimeUnit.MILLISECONDS);
             return response;
         } finally {
