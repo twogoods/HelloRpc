@@ -1,6 +1,5 @@
 package com.tg.rpc.core.config;
 
-import javax.print.DocFlavor;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,19 +8,13 @@ import java.util.List;
  * @since 2017/7/10
  */
 public class ClientProperty {
-    private String name;
+    private String serviceName;
     private int requestTimeoutMillis = 2000;
     private String interfaces;
     private String providerList;
-    private String registery;
-    private int maxCapacity = 3;
-    private int maxTotal = 3;
-    private int maxIdle = 3;
-    private int minIdle = 1;
-    private int borrowMaxWaitMillis = 5000;
 
-    public ClientProperty setName(String name) {
-        this.name = name;
+    public ClientProperty setName(String serviceName) {
+        this.serviceName = serviceName;
         return this;
     }
 
@@ -40,38 +33,8 @@ public class ClientProperty {
         return this;
     }
 
-    public ClientProperty setRegistery(String registery) {
-        this.registery = registery;
-        return this;
-    }
-
-    public ClientProperty setMaxCapacity(int maxCapacity) {
-        this.maxCapacity = maxCapacity;
-        return this;
-    }
-
-    public ClientProperty setMaxTotal(int maxTotal) {
-        this.maxTotal = maxTotal;
-        return this;
-    }
-
-    public ClientProperty setMaxIdle(int maxIdle) {
-        this.maxIdle = maxIdle;
-        return this;
-    }
-
-    public ClientProperty setMinIdle(int minIdle) {
-        this.minIdle = minIdle;
-        return this;
-    }
-
-    public ClientProperty setBorrowMaxWaitMillis(int borrowMaxWaitMillis) {
-        this.borrowMaxWaitMillis = borrowMaxWaitMillis;
-        return this;
-    }
-
-    public String getName() {
-        return name;
+    public String getServiceName() {
+        return serviceName;
     }
 
     public int getRequestTimeoutMillis() {
@@ -82,32 +45,7 @@ public class ClientProperty {
         return Arrays.asList(interfaces.split(","));
     }
 
-
     public List<String> getProviderList() {
         return Arrays.asList(providerList.split(","));
-    }
-
-    public String getRegistery() {
-        return registery;
-    }
-
-    public int getMaxCapacity() {
-        return maxCapacity;
-    }
-
-    public int getMaxTotal() {
-        return maxTotal;
-    }
-
-    public int getMaxIdle() {
-        return maxIdle;
-    }
-
-    public int getMinIdle() {
-        return minIdle;
-    }
-
-    public int getBorrowMaxWaitMillis() {
-        return borrowMaxWaitMillis;
     }
 }

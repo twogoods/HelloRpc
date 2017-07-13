@@ -59,10 +59,10 @@ public class Server {
     public static class Builder {
         private int port = ConfigConstant.DEFAULT_PORT;
         private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
-        private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
-        private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
         private ResponseHandler responseHandler = new DefaultResponseHandler();
         private ServiceRegistry serviceRegistry;
+        private String serverName;
+        private String serverId;
 
         public Server.Builder port(int port) {
             this.port = port;

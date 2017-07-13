@@ -15,10 +15,16 @@ import com.tg.rpc.example.service.TestServiceImpl;
  */
 public class ServerBootstrap {
     public static void main(String[] args) throws ValidateException {
-        ServiceRegistry serviceRegistry= ConsulCompentFactory.getRegistry();
-        Server server = new Server.Builder().port(9002).maxCapacity(3).serviceRegistry(serviceRegistry).build();
+        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry();
+        Server server = new Server.Builder()
+                .port(9004)
+                .serverName("helloService")
+                .serverId("test")
+                .maxCapacity(3)
+                .serviceRegistry(serviceRegistry)
+                .build();
         server.addService(EchoService.class, new EchoServiceImpl())
-                .addService(TestService.class,new TestServiceImpl());
+                .addService(TestService.class, new TestServiceImpl());
         server.start();
     }
 }

@@ -15,7 +15,11 @@ import com.tg.rpc.example.service.TestService;
 public class ClientBootstrap {
     public static void main(String[] args) throws Exception {
         ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery();
-        Client client = new Client.Builder().serviceDiscovery(serviceDiscovery).connectionMinIdle(1).maxCapacity(3).build();
+        Client client = new Client.Builder()
+                .serviceDiscovery(serviceDiscovery)
+                .connectionMinIdle(1)
+                .maxCapacity(3)
+                .build();
         DefaultClientInterceptor interceptor = new DefaultClientInterceptor(client);
         ClientProxy clientProxy = new JdkClientProxy(interceptor);
 

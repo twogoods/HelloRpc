@@ -25,11 +25,11 @@ public class RpcConfig {
     private String consulHost = ConfigConstant.DEFAULT_REGISTRY_HOST;
     private int consulPort = ConfigConstant.DEFAULT_REGISTRY_PORT;
     private long ttl = ConfigConstant.DEFAULT_TTL;
-    private String serverName = ConfigConstant.DEFAULT_SERVICE_NAME;
-    private String serverId = ConfigConstant.DEFAULT_SERVICE_ID;
     private String zookeeperHost = ConfigConstant.DEFAULT_ZOOKEEPER_HOST;
     private int zookeeperPort = ConfigConstant.DEFAULT_ZOOKEEPER_PORT;
     private String zkServicePath = ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH;
+    private String serverName;
+    private String serverId;
 
     private String registery = Registry.DEFAULT.value();
 

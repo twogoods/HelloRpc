@@ -43,7 +43,6 @@ public class Client {
 
     private int maxCapacity;
     private int requestTimeoutMillis;
-    //TODO 连接池配置改掉
     private int maxTotal;
     private int maxIdle;
     private int minIdle;
@@ -55,7 +54,7 @@ public class Client {
     private Map<String, CopyOnWriteArrayList<ChannelPoolWrapper>> clientPools = new HashMap<>();
 
     EventLoopGroup group;
-    Bootstrap b;
+    Bootstrap bootstrap;
 
     //TODO 多个client 不是全局唯一的
     private AtomicLong requestId = new AtomicLong(100000);
@@ -167,8 +166,8 @@ public class Client {
     public void preInit() {
         //TODO NioEventLoopGroup里线程复用后设置合适的线程数.默认是cpu数的2倍,根据maxTotal的值适当选取
         group = new NioEventLoopGroup();
-        b = new Bootstrap();
-        b.group(group).channel(NioSocketChannel.class)
+        bootstrap = new Bootstrap();
+        bootstrap.group(group).channel(NioSocketChannel.class)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, borrowMaxWaitMillis)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
@@ -185,7 +184,7 @@ public class Client {
     public Channel initConnection(String host, int port) {
         try {
             log.info("client try to connection {}:{}", host, port);
-            ChannelFuture f = b.connect(host, port).sync();
+            ChannelFuture f = bootstrap.connect(host, port).sync();
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
@@ -209,12 +208,12 @@ public class Client {
     private Map<String, String> serviceCache = new HashMap<>();
 
     private void parseClientProperty(ClientProperty clientProperty) {
-        clientProperty.getInterfaces().forEach(iface -> serviceCache.put(iface, clientProperty.getName()));
+        clientProperty.getInterfaces().forEach(iface -> serviceCache.put(iface, clientProperty.getServiceName()));
     }
 
     private void initPoolMap() {
         clients.forEach(clientProperty -> {
-            clientPools.put(clientProperty.getName(), new CopyOnWriteArrayList<>());
+            clientPools.put(clientProperty.getServiceName(), new CopyOnWriteArrayList<>());
         });
     }
 
@@ -229,7 +228,7 @@ public class Client {
         for (ClientProperty clientProperty : clients) {
             List<Service> serviceList = null;
             try {
-                serviceList = serviceDiscovery.discover(clientProperty.getName());
+                serviceList = serviceDiscovery.discover(clientProperty.getServiceName());
             } catch (Exception e) {
                 log.error("discovery service error:{}", e);
                 continue;
@@ -238,14 +237,14 @@ public class Client {
             final Comparable<ChannelPoolWrapper, Service> comparable = (ChannelPoolWrapper channelPoolWrapper, Service service)
                     -> channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
             try {
-                serviceDiscovery.addListener(clientProperty.getName(), services -> {
-                    List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(clientProperty.getName());
-                    log.debug("execute listener :cache:{}, nowservices:{}", clientPools.get(clientProperty.getName()), services);
+                serviceDiscovery.addListener(clientProperty.getServiceName(), services -> {
+                    List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(clientProperty.getServiceName());
+                    log.debug("execute listener :cache:{}, nowservices:{}", clientPools.get(clientProperty.getServiceName()), services);
                     List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
                     List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
                     log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
                     for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
-                        removeChannel(clientProperty.getName(), channelPoolWrapper);
+                        removeChannel(clientProperty.getServiceName(), channelPoolWrapper);
                     }
                     for (Service service : shouldAdded) {
                         addChannel(service);
@@ -277,7 +276,7 @@ public class Client {
         clientProperty.getProviderList().forEach(provider -> {
             try {
                 URL providerUrl = new URL(HTTP_PROTOCOL + provider);
-                clientPools.get(clientProperty.getName()).add(new ChannelPoolWrapper(this, providerUrl.getHost(), providerUrl.getPort()));
+                clientPools.get(clientProperty.getServiceName()).add(new ChannelPoolWrapper(this, providerUrl.getHost(), providerUrl.getPort()));
             } catch (MalformedURLException e) {
                 log.error("providerList parse error, origin content :{}", provider);
             }

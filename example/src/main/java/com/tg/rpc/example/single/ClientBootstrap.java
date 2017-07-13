@@ -26,6 +26,8 @@ public class ClientBootstrap {
                 .port(9001)
                 .maxCapacity(3)
                 .requestTimeoutMillis(3500)
+                .connectionMaxTotal(10)
+                .connectionMaxIdle(6)
                 .client(clientA)
                 .client(clientB)
                 .build();
@@ -37,7 +39,5 @@ public class ClientBootstrap {
 
         TestService testService = clientProxy.getProxy(TestService.class);
         System.out.println(testService.add(2, 5));
-
-        System.out.println(echoService.echo("twogoods"));
     }
 }
