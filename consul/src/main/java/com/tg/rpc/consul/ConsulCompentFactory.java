@@ -23,7 +23,7 @@ public class ConsulCompentFactory {
     }
 
     public static ServiceRegistry getRegistry() {
-        return getRegistry(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT, ConfigConstant.DEFAULT_TTL);
+        return getRegistry(ConfigConstant.DEFAULT_CONSUL_HOST, ConfigConstant.DEFAULT_CONSUL_PORT, ConfigConstant.DEFAULT_TTL);
     }
 
     public static ServiceDiscovery getDiscovery(String host, int port) {
@@ -32,6 +32,6 @@ public class ConsulCompentFactory {
     }
 
     public static ServiceDiscovery getDiscovery() {
-        return getDiscovery(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT);
+        return getDiscovery(ConfigConstant.DEFAULT_CONSUL_HOST, ConfigConstant.DEFAULT_CONSUL_PORT);
     }
 }

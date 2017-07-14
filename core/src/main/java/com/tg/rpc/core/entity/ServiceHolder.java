@@ -13,7 +13,6 @@ import java.util.Map;
  * Created by twogoods on 17/2/17.
  */
 public class ServiceHolder {
-
     private static final Logger log = LoggerFactory.getLogger(ServiceHolder.class);
 
     private static Map<String, Object> serviceMap = new HashMap<>();

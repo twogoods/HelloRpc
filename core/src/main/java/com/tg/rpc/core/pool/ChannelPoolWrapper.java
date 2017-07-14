@@ -2,6 +2,7 @@ package com.tg.rpc.core.pool;
 
 import com.tg.rpc.core.bootstrap.Client;
 import io.netty.channel.Channel;
+import lombok.Data;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
@@ -9,6 +10,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 /**
  * Created by twogoods on 17/2/16.
  */
+@Data
 public class ChannelPoolWrapper {
     private String host;
     private int port;
@@ -41,29 +43,5 @@ public class ChannelPoolWrapper {
 
     public void returnObject(Channel channel) {
         pool.returnObject(channel);
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    @Override
-    public String toString() {
-        return "{" +
-                "host='" + host + '\'' +
-                ", port=" + port +
-                '}';
     }
 }

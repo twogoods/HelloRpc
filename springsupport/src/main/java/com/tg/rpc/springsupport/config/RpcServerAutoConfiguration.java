@@ -53,7 +53,7 @@ public class RpcServerAutoConfiguration {
     }
 
     private Server serverWithConsul() {
-        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry(rpcConfig.getConsulHost(), rpcConfig.getConsulPort(), rpcConfig.getTTL());
+        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry(rpcConfig.getConsulHost(), rpcConfig.getConsulPort(), rpcConfig.getTtl());
         return new Server.Builder().serviceRegistry(serviceRegistry)
                 .serverId(rpcConfig.getServerId())
                 .serverName(rpcConfig.getServerName())

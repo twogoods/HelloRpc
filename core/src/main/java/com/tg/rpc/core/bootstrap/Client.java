@@ -6,6 +6,7 @@ import com.tg.rpc.core.config.ClientProperty;
 import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
+import com.tg.rpc.core.exception.ClientMissingException;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.channel.ClientChannelHandler;
@@ -18,6 +19,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by twogoods on 17/2/16.
  */
+@Data
 public class Client {
     private static final Logger log = LoggerFactory.getLogger(Client.class);
 
@@ -52,9 +55,10 @@ public class Client {
     private ServiceDiscovery serviceDiscovery;
 
     private Map<String, CopyOnWriteArrayList<ChannelPoolWrapper>> clientPools = new HashMap<>();
+    private Map<String, String> serviceCache = new HashMap<>();
 
-    EventLoopGroup group;
-    Bootstrap bootstrap;
+    private EventLoopGroup group;
+    private Bootstrap bootstrap;
 
     //TODO 多个client 不是全局唯一的
     private AtomicLong requestId = new AtomicLong(100000);
@@ -205,21 +209,30 @@ public class Client {
         return null;
     }
 
-    private Map<String, String> serviceCache = new HashMap<>();
+    private void init() {
+        initPoolMapAndParse();
+        if (serviceDiscovery == null) {
+            initChannelInDefaultMode();
+            return;
+        }
+        initChannelInRegistryMode();
+        log.info("Registry mode! {} discover services done.", serviceDiscovery.getClass().getSimpleName());
+    }
+
 
     private void parseClientProperty(ClientProperty clientProperty) {
         clientProperty.getInterfaces().forEach(iface -> serviceCache.put(iface, clientProperty.getServiceName()));
     }
 
-    private void initPoolMap() {
+    private void initPoolMapAndParse() {
         clients.forEach(clientProperty -> {
             clientPools.put(clientProperty.getServiceName(), new CopyOnWriteArrayList<>());
+            parseClientProperty(clientProperty);
         });
     }
 
     private void initChannelInDefaultMode() {
         clients.forEach(clientProperty -> {
-            parseClientProperty(clientProperty);
             addChannel(clientProperty);
         });
     }
@@ -231,6 +244,10 @@ public class Client {
                 serviceList = serviceDiscovery.discover(clientProperty.getServiceName());
             } catch (Exception e) {
                 log.error("discovery service error:{}", e);
+                continue;
+            }
+            if (serviceList.size() == 0) {
+                log.warn("can't get any provider for service:{}", clientProperty.getServiceName());
                 continue;
             }
             serviceList.forEach(service -> addChannel(service));
@@ -254,16 +271,6 @@ public class Client {
                 log.error("serviceDiscovery set listener error:{}", e);
             }
         }
-    }
-
-    private void init() {
-        initPoolMap();
-        if (serviceDiscovery == null) {
-            initChannelInDefaultMode();
-            return;
-        }
-        initChannelInRegistryMode();
-        log.info("Registry mode! service discover done.");
     }
 
     private void addChannel(Service service) {
@@ -303,9 +310,17 @@ public class Client {
     public Response sendRequest(Method method, Object[] args, Class clazz) throws Exception {
         Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args);
         request.setRequestId(requestId.incrementAndGet());
-        ChannelPoolWrapper channelPoolWrapper = selectChannel(serviceCache.get(clazz.getName()));
+        String serviceName = serviceCache.get(clazz.getName());
+        if (StringUtils.isEmpty(serviceName)) {
+            throw new ClientMissingException(String.format("can't get service %s , config it in 'interfaces' properity", clazz.getName()));
+        }
+        ChannelPoolWrapper channelPoolWrapper = selectChannel(serviceName);
+        if (channelPoolWrapper == null) {
+            //TODO 异常日志 + 降级
+        }
         Channel channel = channelPoolWrapper.getObject();
         if (channel == null) {
+            //TODO 异常日志 + 降级
             Validate.notNull(channel, "can't get channel from pool");
         }
         BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
@@ -318,45 +333,5 @@ public class Client {
             channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());
         }
-    }
-
-    public int getRequestTimeoutMillis() {
-        return requestTimeoutMillis;
-    }
-
-    public void setRequestTimeoutMillis(int requestTimeoutMillis) {
-        this.requestTimeoutMillis = requestTimeoutMillis;
-    }
-
-    public int getMaxTotal() {
-        return maxTotal;
-    }
-
-    public void setMaxTotal(int maxTotal) {
-        this.maxTotal = maxTotal;
-    }
-
-    public int getMaxIdle() {
-        return maxIdle;
-    }
-
-    public void setMaxIdle(int maxIdle) {
-        this.maxIdle = maxIdle;
-    }
-
-    public int getMinIdle() {
-        return minIdle;
-    }
-
-    public void setMinIdle(int minIdle) {
-        this.minIdle = minIdle;
-    }
-
-    public int getBorrowMaxWaitMillis() {
-        return borrowMaxWaitMillis;
-    }
-
-    public void setBorrowMaxWaitMillis(int borrowMaxWaitMillis) {
-        this.borrowMaxWaitMillis = borrowMaxWaitMillis;
     }
 }

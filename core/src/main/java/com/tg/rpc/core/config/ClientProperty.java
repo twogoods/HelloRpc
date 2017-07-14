@@ -1,5 +1,7 @@
 package com.tg.rpc.core.config;
 
+import lombok.Data;
+
 import java.util.Arrays;
 import java.util.List;
 

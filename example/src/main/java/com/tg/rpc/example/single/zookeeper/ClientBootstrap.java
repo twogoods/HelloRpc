@@ -1,4 +1,4 @@
-package com.tg.rpc.example.single.consul;
+package com.tg.rpc.example.single.zookeeper;
 
 import com.tg.rpc.consul.ConsulCompentFactory;
 import com.tg.rpc.core.bootstrap.Client;
@@ -9,6 +9,7 @@ import com.tg.rpc.core.proxy.JdkClientProxy;
 import com.tg.rpc.core.servicecenter.ServiceDiscovery;
 import com.tg.rpc.example.service.EchoService;
 import com.tg.rpc.example.service.TestService;
+import com.tg.rpc.zookeeper.ZookeeperCompentFactory;
 
 /**
  * Created by twogoods on 17/2/17.
@@ -19,7 +20,7 @@ public class ClientBootstrap {
         clientA.setName("testService")
                 .setInterfaces("com.tg.rpc.example.service.EchoService,com.tg.rpc.example.service.TestService");
         ClientProperty clientB = new ClientProperty();
-        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery();
+        ServiceDiscovery serviceDiscovery = ZookeeperCompentFactory.getDiscovery("localhost",2181,"/tgrpc/services");
         Client client = new Client.Builder()
                 .serviceDiscovery(serviceDiscovery)
                 .connectionMinIdle(1)

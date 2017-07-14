@@ -30,7 +30,7 @@ public class ZookeeperCompentFactory {
     }
 
     public static ServiceRegistry getRegistry() {
-        return getRegistry(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT, ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH);
+        return getRegistry(ConfigConstant.DEFAULT_ZOOKEEPER_HOST, ConfigConstant.DEFAULT_ZOOKEEPER_PORT, ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH);
     }
 
     public static ServiceDiscovery getDiscovery(String zkHost, int zkPort, String servicePath) {
@@ -47,6 +47,6 @@ public class ZookeeperCompentFactory {
     }
 
     public static ServiceDiscovery getDiscovery() {
-        return getDiscovery(ConfigConstant.DEFAULT_REGISTRY_HOST, ConfigConstant.DEFAULT_REGISTRY_PORT, ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH);
+        return getDiscovery(ConfigConstant.DEFAULT_ZOOKEEPER_HOST, ConfigConstant.DEFAULT_ZOOKEEPER_PORT, ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH);
     }
 }

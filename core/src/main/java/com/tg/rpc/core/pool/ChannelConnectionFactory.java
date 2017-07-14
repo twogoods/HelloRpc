@@ -10,7 +10,6 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
  * Created by twogoods on 17/2/16.
  */
 public class ChannelConnectionFactory extends BasePooledObjectFactory<Channel> {
-
     private Client client;
     private String host;
     private int port;
