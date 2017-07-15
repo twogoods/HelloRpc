@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Configuration;
  * Created by twogoods on 17/2/21.
  */
 @Configuration
-@EnableConfigurationProperties(RpcConfig.class)
+@EnableConfigurationProperties(RpcServerConfig.class)
 public class RpcServerAutoConfiguration {
 
-    private final RpcConfig rpcConfig;
+    private final RpcServerConfig rpcServerConfig;
 
-    public RpcServerAutoConfiguration(RpcConfig rpcConfig) {
-        this.rpcConfig = rpcConfig;
+    public RpcServerAutoConfiguration(RpcServerConfig rpcServerConfig) {
+        this.rpcServerConfig = rpcServerConfig;
     }
 
     @Bean
@@ -31,11 +31,13 @@ public class RpcServerAutoConfiguration {
     @Bean
     public Server server() {
         Server server;
-        if (Registry.DEFAULT.equals(rpcConfig.getRegistery())) {
+        if (Registry.DEFAULT == rpcServerConfig.getRegistery()) {
+            System.out.println("in default " + rpcServerConfig);
             server = serverWithoutregistry();
-        } else if (Registry.CONSUL.equals(rpcConfig.getRegistery())) {
+        } else if (Registry.CONSUL == rpcServerConfig.getRegistery()) {
+            System.out.println("in consul " + rpcServerConfig);
             server = serverWithConsul();
-        } else if (Registry.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
+        } else if (Registry.ZOOKEEPER == rpcServerConfig.getRegistery()) {
             server = serverWithZookeeper();
         } else {
             throw new IllegalArgumentException("properity Registry illega");
@@ -46,28 +48,30 @@ public class RpcServerAutoConfiguration {
 
 
     private Server serverWithoutregistry() {
-        return new Server.Builder().port(rpcConfig.getPort())
-                .maxCapacity(rpcConfig.getMaxCapacity())
+        return new Server.Builder().port(rpcServerConfig.getPort())
+                .serviceId(rpcServerConfig.getServiceId())
+                .serviceName(rpcServerConfig.getServiceName())
+                .maxCapacity(rpcServerConfig.getMaxCapacity())
                 .responseHandler(springBeanResponseHandler())
                 .build();
     }
 
     private Server serverWithConsul() {
-        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry(rpcConfig.getConsulHost(), rpcConfig.getConsulPort(), rpcConfig.getTtl());
+        ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry(rpcServerConfig.getConsulHost(), rpcServerConfig.getConsulPort(), rpcServerConfig.getTtl());
         return new Server.Builder().serviceRegistry(serviceRegistry)
-                .serverId(rpcConfig.getServerId())
-                .serverName(rpcConfig.getServerName())
-                .maxCapacity(rpcConfig.getMaxCapacity())
+                .serviceId(rpcServerConfig.getServiceId())
+                .serviceName(rpcServerConfig.getServiceName())
+                .maxCapacity(rpcServerConfig.getMaxCapacity())
                 .responseHandler(springBeanResponseHandler())
                 .build();
     }
 
     private Server serverWithZookeeper() {
-        ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry(rpcConfig.getZookeeperHost(), rpcConfig.getZookeeperPort(), rpcConfig.getZkServicePath());
+        ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry(rpcServerConfig.getZookeeperHost(), rpcServerConfig.getZookeeperPort(), rpcServerConfig.getZkServicePath());
         return new Server.Builder().serviceRegistry(serviceRegistry)
-                .serverId(rpcConfig.getServerId())
-                .serverName(rpcConfig.getServerName())
-                .maxCapacity(rpcConfig.getMaxCapacity())
+                .serviceId(rpcServerConfig.getServiceId())
+                .serviceName(rpcServerConfig.getServiceName())
+                .maxCapacity(rpcServerConfig.getMaxCapacity())
                 .responseHandler(springBeanResponseHandler())
                 .build();
     }

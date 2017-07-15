@@ -3,12 +3,14 @@ package com.tg.rpc.springsupport.config;
 import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.servicecenter.Registry;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Created by twogoods on 17/2/18.
  */
 @Data
+@ToString
 @ConfigurationProperties(prefix = RpcServerConfig.TGRPC_PREFIX)
 public class RpcServerConfig {
 
@@ -25,8 +27,8 @@ public class RpcServerConfig {
     private String zookeeperHost = ConfigConstant.DEFAULT_ZOOKEEPER_HOST;
     private int zookeeperPort = ConfigConstant.DEFAULT_ZOOKEEPER_PORT;
     private String zkServicePath = ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH;
-    private String serverName;
-    private String serverId;
+    private String serviceName;
+    private String serviceId;
 
-    private String registery = Registry.DEFAULT.value();
+    private Registry registery = Registry.DEFAULT;
 }

@@ -18,10 +18,6 @@ public enum Registry {
         this.name = name;
     }
 
-    public String value() {
-        return this.name;
-    }
-
     public boolean equals(String name) {
         return this.name.equals(name);
     }

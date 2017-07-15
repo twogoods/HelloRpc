@@ -15,13 +15,13 @@ import com.tg.rpc.example.service.EchoService;
 public class ClientBootstrap {
     public static void main(String[] args) throws Exception {
         ClientProperty clientA = new ClientProperty();
-        clientA.setName("A")
-                .setProviderList("127.0.0.1:9001")
-                .setInterfaces("com.tg.rpc.example.service.EchoService");
+        clientA.serviceName("A")
+                .provider("127.0.0.1:9001")
+                .interfaces("com.tg.rpc.example.service.EchoService");
         ClientProperty clientB = new ClientProperty();
-        clientB.setName("B")
-                .setProviderList("127.0.0.1:9001")
-                .setInterfaces("com.tg.rpc.example.service.TestService");
+        clientB.serviceName("B")
+                .provider("127.0.0.1:9001")
+                .interfaces("com.tg.rpc.example.service.TestService");
         Client client = new Client.Builder().host("127.0.0.1")
                 .port(9001)
                 .maxCapacity(3)

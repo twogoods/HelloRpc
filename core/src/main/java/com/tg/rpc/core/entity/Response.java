@@ -14,4 +14,10 @@ public class Response {
     private long requestId;
     private int code;
     private Object returnObj;
+    private String msg;
+
+    public void setStatus(ResponseStatus responseStatus) {
+        this.code = responseStatus.getCode();
+        this.msg = responseStatus.getMsg();
+    }
 }

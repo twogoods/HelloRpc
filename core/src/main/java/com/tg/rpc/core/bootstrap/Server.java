@@ -35,8 +35,8 @@ public class Server {
 
     private int port;
     private int maxCapacity;
-    private String serverName;
-    private String serverId;
+    private String serviceName;
+    private String serviceId;
     private ResponseHandler responseHandler;
     private ServiceRegistry serviceRegistry;
 
@@ -47,11 +47,11 @@ public class Server {
         this.responseHandler = responseHandler;
     }
 
-    private Server(int port, int maxCapacity, String serverName, String serverId, ResponseHandler responseHandler, ServiceRegistry serviceRegistry) {
+    private Server(int port, int maxCapacity, String serviceName, String serviceId, ResponseHandler responseHandler, ServiceRegistry serviceRegistry) {
         this.port = port;
         this.maxCapacity = maxCapacity;
-        this.serverName = serverName;
-        this.serverId = serverId;
+        this.serviceName = serviceName;
+        this.serviceId = serviceId;
         this.responseHandler = responseHandler;
         this.serviceRegistry = serviceRegistry;
     }
@@ -61,8 +61,8 @@ public class Server {
         private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
         private ResponseHandler responseHandler = new DefaultResponseHandler();
         private ServiceRegistry serviceRegistry;
-        private String serverName;
-        private String serverId;
+        private String serviceName;
+        private String serviceId;
 
         public Server.Builder port(int port) {
             this.port = port;
@@ -74,13 +74,13 @@ public class Server {
             return this;
         }
 
-        public Server.Builder serverName(String serverName) {
-            this.serverName = serverName;
+        public Server.Builder serviceName(String serviceName) {
+            this.serviceName = serviceName;
             return this;
         }
 
-        public Server.Builder serverId(String serverId) {
-            this.serverId = serverId;
+        public Server.Builder serviceId(String serviceId) {
+            this.serviceId = serviceId;
             return this;
         }
 
@@ -95,12 +95,13 @@ public class Server {
         }
 
         public Server build() {
+            System.out.println("---------" + serviceName);
             Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
             Validate.isTrue(maxCapacity > 0, "maxCapacity can't be negative, maxCapacity:%d", maxCapacity);
-            Validate.notEmpty(serverName, "serverName can't be empty");
-            Validate.notEmpty(serverId, "serverName can't be empty");
+            Validate.notEmpty(serviceName, "serviceName can't be empty");
+            Validate.notEmpty(serviceId, "serverName can't be empty");
             Validate.notNull(responseHandler, "responseHandler can't be null");
-            return new Server(port, maxCapacity, serverName, serverId, responseHandler, serviceRegistry);
+            return new Server(port, maxCapacity, serviceName, serviceId, responseHandler, serviceRegistry);
         }
     }
 
@@ -137,8 +138,8 @@ public class Server {
 
     private void registerService() throws Exception {
         Service service = new Service();
-        service.setId(serverId);
-        service.setName(serverName);
+        service.setId(serviceId);
+        service.setName(serviceName);
         service.setAddress(getLocalIp());
         service.setPort(port);
         service.setTtl(serviceRegistry.getTTL());

@@ -1,6 +1,5 @@
 package com.tg.rpc.example.single.zookeeper;
 
-import com.tg.rpc.consul.ConsulCompentFactory;
 import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.config.ClientProperty;
 import com.tg.rpc.core.proxy.ClientProxy;
@@ -17,9 +16,8 @@ import com.tg.rpc.zookeeper.ZookeeperCompentFactory;
 public class ClientBootstrap {
     public static void main(String[] args) throws Exception {
         ClientProperty clientA = new ClientProperty();
-        clientA.setName("testService")
-                .setInterfaces("com.tg.rpc.example.service.EchoService,com.tg.rpc.example.service.TestService");
-        ClientProperty clientB = new ClientProperty();
+        clientA.serviceName("testService")
+                .interfaces("com.tg.rpc.example.service.EchoService,com.tg.rpc.example.service.TestService");
         ServiceDiscovery serviceDiscovery = ZookeeperCompentFactory.getDiscovery("localhost",2181,"/tgrpc/services");
         Client client = new Client.Builder()
                 .serviceDiscovery(serviceDiscovery)

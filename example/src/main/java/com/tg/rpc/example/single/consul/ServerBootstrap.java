@@ -1,7 +1,6 @@
 package com.tg.rpc.example.single.consul;
 
 import com.tg.rpc.consul.ConsulCompentFactory;
-import com.tg.rpc.consul.ConsulRegistry;
 import com.tg.rpc.core.bootstrap.Server;
 import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.servicecenter.ServiceRegistry;
@@ -18,8 +17,8 @@ public class ServerBootstrap {
         ServiceRegistry serviceRegistry = ConsulCompentFactory.getRegistry("localhost", 8500, 30000);
         Server server = new Server.Builder()
                 .port(9001)
-                .serverName("testService")
-                .serverId("dev")
+                .serviceName("testService")
+                .serviceId("dev")
                 .maxCapacity(3)
                 .serviceRegistry(serviceRegistry)
                 .build();

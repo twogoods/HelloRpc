@@ -15,8 +15,8 @@ public class ServerBootstrap {
         //端口号,最大的传输容量(单位M),服务响应的Handle
         Server server = new Server.Builder()
                 .port(9001)
-                .serverName("test")
-                .serverId("dev")
+                .serviceName("test")
+                .serviceId("dev")
                 .maxCapacity(3)
                 .build();
         server.addService(EchoService.class, new EchoServiceImpl())

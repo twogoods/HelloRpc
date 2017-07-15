@@ -16,10 +16,10 @@ import com.tg.rpc.example.service.TestService;
 public class ClientBootstrap {
     public static void main(String[] args) throws Exception {
         ClientProperty clientA = new ClientProperty();
-        clientA.setName("testService")
-                .setInterfaces("com.tg.rpc.example.service.EchoService,com.tg.rpc.example.service.TestService");
-        ClientProperty clientB = new ClientProperty();
-        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery();
+        clientA.serviceName("testService")
+                .interfaces("com.tg.rpc.example.service.EchoService")
+                .interfaces("com.tg.rpc.example.service.TestService");
+        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery("localhost", 8500);
         Client client = new Client.Builder()
                 .serviceDiscovery(serviceDiscovery)
                 .connectionMinIdle(1)

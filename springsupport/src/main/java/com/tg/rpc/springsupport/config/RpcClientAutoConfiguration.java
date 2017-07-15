@@ -19,23 +19,24 @@ import org.springframework.context.annotation.Configuration;
  * Created by twogoods on 17/2/21.
  */
 @Configuration
-@EnableConfigurationProperties(RpcConfig.class)
+@EnableConfigurationProperties(RpcClientConfig.class)
 public class RpcClientAutoConfiguration {
 
-    private final RpcConfig rpcConfig;
+    private final RpcClientConfig rpcClientConfig;
 
-    public RpcClientAutoConfiguration(RpcConfig rpcConfig) {
-        this.rpcConfig = rpcConfig;
+    public RpcClientAutoConfiguration(RpcClientConfig rpcClientConfig) {
+        this.rpcClientConfig = rpcClientConfig;
     }
+
 
     @Bean("defaultClient")
     public Client client() {
         Client client;
-        if (Registry.DEFAULT.equals(rpcConfig.getRegistery())) {
+        if (Registry.DEFAULT == rpcClientConfig.getRegistery()) {
             client = clientWithoutregistry();
-        } else if (Registry.CONSUL.equals(rpcConfig.getRegistery())) {
+        } else if (Registry.CONSUL == rpcClientConfig.getRegistery()) {
             client = clientWithConsul();
-        } else if (Registry.ZOOKEEPER.equals(rpcConfig.getRegistery())) {
+        } else if (Registry.ZOOKEEPER == rpcClientConfig.getRegistery()) {
             client = clientWithZookeeper();
         } else {
             throw new IllegalArgumentException("properity Registry illega");
@@ -59,38 +60,42 @@ public class RpcClientAutoConfiguration {
     }
 
     private Client clientWithoutregistry() {
-        return new Client.Builder().host(rpcConfig.getHost())
-                .port(rpcConfig.getPort())
-                .maxCapacity(rpcConfig.getMaxCapacity())
-                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                .connectionMaxTotal(rpcConfig.getMaxTotal())
-                .connectionMaxIdle(rpcConfig.getMaxIdle())
-                .connectionMinIdle(rpcConfig.getMinIdle())
-                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
+        return new Client.Builder().host(rpcClientConfig.getHost())
+                .port(rpcClientConfig.getPort())
+                .maxCapacity(rpcClientConfig.getMaxCapacity())
+                .requestTimeoutMillis(rpcClientConfig.getRequestTimeoutMillis())
+                .connectionMaxTotal(rpcClientConfig.getMaxTotal())
+                .connectionMaxIdle(rpcClientConfig.getMaxIdle())
+                .connectionMinIdle(rpcClientConfig.getMinIdle())
+                .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .clients(rpcClientConfig.getClients())
                 .build();
     }
 
     private Client clientWithConsul() {
-        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery(rpcConfig.getConsulHost(), rpcConfig.getConsulPort());
+        ServiceDiscovery serviceDiscovery = ConsulCompentFactory.getDiscovery(rpcClientConfig.getConsulHost(), rpcClientConfig.getConsulPort());
         return new Client.Builder().serviceDiscovery(serviceDiscovery)
-                .maxCapacity(rpcConfig.getMaxCapacity())
-                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                .connectionMaxTotal(rpcConfig.getMaxTotal())
-                .connectionMaxIdle(rpcConfig.getMaxIdle())
-                .connectionMinIdle(rpcConfig.getMinIdle())
-                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
+                .maxCapacity(rpcClientConfig.getMaxCapacity())
+                .requestTimeoutMillis(rpcClientConfig.getRequestTimeoutMillis())
+                .connectionMaxTotal(rpcClientConfig.getMaxTotal())
+                .connectionMaxIdle(rpcClientConfig.getMaxIdle())
+                .connectionMinIdle(rpcClientConfig.getMinIdle())
+                .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .clients(rpcClientConfig.getClients())
                 .build();
     }
 
     private Client clientWithZookeeper() {
-        ServiceDiscovery serviceDiscovery = ZookeeperCompentFactory.getDiscovery(rpcConfig.getZookeeperHost(), rpcConfig.getZookeeperPort(), rpcConfig.getZkServicePath());
+        ServiceDiscovery serviceDiscovery = ZookeeperCompentFactory.getDiscovery(rpcClientConfig.getZookeeperHost(), rpcClientConfig.getZookeeperPort(), rpcClientConfig.getZkServicePath());
         return new Client.Builder().serviceDiscovery(serviceDiscovery)
-                .maxCapacity(rpcConfig.getMaxCapacity())
-                .requestTimeoutMillis(rpcConfig.getRequestTimeoutMillis())
-                .connectionMaxTotal(rpcConfig.getMaxTotal())
-                .connectionMaxIdle(rpcConfig.getMaxIdle())
-                .connectionMinIdle(rpcConfig.getMinIdle())
-                .connectionBorrowMaxWaitMillis(rpcConfig.getBorrowMaxWaitMillis())
+                .maxCapacity(rpcClientConfig.getMaxCapacity())
+                .requestTimeoutMillis(rpcClientConfig.getRequestTimeoutMillis())
+                .connectionMaxTotal(rpcClientConfig.getMaxTotal())
+                .connectionMaxIdle(rpcClientConfig.getMaxIdle())
+                .connectionMinIdle(rpcClientConfig.getMinIdle())
+                .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .clients(rpcClientConfig.getClients())
                 .build();
     }
+
 }

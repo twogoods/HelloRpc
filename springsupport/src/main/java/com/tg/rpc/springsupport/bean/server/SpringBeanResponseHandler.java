@@ -1,10 +1,9 @@
 package com.tg.rpc.springsupport.bean.server;
 
 import com.tg.rpc.core.entity.Response;
-import com.tg.rpc.core.entity.ResponseCodeConstant;
+import com.tg.rpc.core.entity.ResponseStatus;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.response.ResponseHandler;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -31,24 +30,21 @@ public class SpringBeanResponseHandler implements ResponseHandler, BeanFactoryAw
 
     @Override
     public Response handle(Request request) {
-        String serviceName = request.getClazz().getSimpleName();
-        Object serviceImplObj;
-        //TODO serviceName没起到作用
-        if (StringUtils.isEmpty(serviceName)) {
-            serviceImplObj = beanFactory.getBean(request.getClazz());
-        } else {
-            serviceImplObj = beanFactory.getBean(serviceName);
-        }
+        Object serviceImplObj = beanFactory.getBean(request.getClazz());
         Response response = new Response();
+        response.setRequestId(request.getRequestId());
+        if (serviceImplObj == null) {
+            response.setStatus(ResponseStatus.SERVICE_NOT_FIND);
+            return response;
+        }
         try {
             Method method = serviceImplObj.getClass().getMethod(request.getMethod(), request.getParameterTypes());
             Object ret = method.invoke(serviceImplObj, request.getParams());
-            response.setRequestId(request.getRequestId());
             response.setReturnObj(ret);
-            response.setCode(ResponseCodeConstant.SUCCESS);
+            response.setStatus(ResponseStatus.SUCCESS);
         } catch (Exception e) {
             log.error("server method invoke error! request:{}", request);
-            response.setCode(ResponseCodeConstant.INTERNAL_ERROR);
+            response.setStatus(ResponseStatus.INTERNAL_ERROR);
         }
         return response;
     }

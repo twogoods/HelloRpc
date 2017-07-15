@@ -1,9 +1,12 @@
 package com.tg.rpc.springsupport.config;
 
+import com.tg.rpc.core.config.ClientProperty;
 import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.servicecenter.Registry;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.List;
 
 /**
  * Created by twogoods on 17/2/18.
@@ -24,14 +27,15 @@ public class RpcClientConfig {
     private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
     private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
 
+    private Registry registery = Registry.DEFAULT;
+    //--------consul---------
     private String consulHost = ConfigConstant.DEFAULT_CONSUL_HOST;
     private int consulPort = ConfigConstant.DEFAULT_CONSUL_PORT;
     private long ttl = ConfigConstant.DEFAULT_TTL;
+    //-------zookeeper------
     private String zookeeperHost = ConfigConstant.DEFAULT_ZOOKEEPER_HOST;
     private int zookeeperPort = ConfigConstant.DEFAULT_ZOOKEEPER_PORT;
     private String zkServicePath = ConfigConstant.DEFAULT_ZOOKEEPER_SERVICE_PATH;
-    private String serverName;
-    private String serverId;
 
-    private String registery = Registry.DEFAULT.value();
+    private List<ClientProperty> clients;
 }

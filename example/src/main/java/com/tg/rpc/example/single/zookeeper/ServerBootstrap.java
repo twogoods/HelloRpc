@@ -1,6 +1,5 @@
 package com.tg.rpc.example.single.zookeeper;
 
-import com.tg.rpc.consul.ConsulCompentFactory;
 import com.tg.rpc.core.bootstrap.Server;
 import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.servicecenter.ServiceRegistry;
@@ -15,11 +14,11 @@ import com.tg.rpc.zookeeper.ZookeeperCompentFactory;
  */
 public class ServerBootstrap {
     public static void main(String[] args) throws ValidateException {
-        ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry();
+        ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry("localhost", 2181, "/tgrpc/services");
         Server server = new Server.Builder()
                 .port(9001)
-                .serverName("testService")
-                .serverId("dev")
+                .serviceName("testService")
+                .serviceId("dev")
                 .maxCapacity(3)
                 .serviceRegistry(serviceRegistry)
                 .build();
