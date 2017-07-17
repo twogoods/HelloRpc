@@ -29,6 +29,7 @@ public class DefaultResponseHandler implements ResponseHandler {
             // 反射做缓存
             Method method = serviceimpl.getClass().getMethod(request.getMethod(), request.getParameterTypes());
             response.setReturnObj(method.invoke(serviceimpl, request.getParams()));
+            response.setStatus(ResponseStatus.SUCCESS);
         } catch (Exception e) {
             log.error("server method invoke error! request:{}", request);
             response.setStatus(ResponseStatus.INTERNAL_ERROR);

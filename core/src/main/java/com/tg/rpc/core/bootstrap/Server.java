@@ -95,7 +95,6 @@ public class Server {
         }
 
         public Server build() {
-            System.out.println("---------" + serviceName);
             Validate.isTrue(port > 0, "port can't be negative, port:%d", port);
             Validate.isTrue(maxCapacity > 0, "maxCapacity can't be negative, maxCapacity:%d", maxCapacity);
             Validate.notEmpty(serviceName, "serviceName can't be empty");
