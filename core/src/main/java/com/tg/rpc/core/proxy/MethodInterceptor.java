@@ -7,6 +7,6 @@ import java.lang.reflect.Method;
  */
 public interface MethodInterceptor {
 
-    Object invoke(Method method,Object[] args,Class clazz) throws Throwable;
+    Object invoke(Method method, Object[] args) throws Throwable;
 
 }

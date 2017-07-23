@@ -1,5 +1,6 @@
 package com.tg.rpc.core.bootstrap;
 
+import com.tg.rpc.breaker.Breaker;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
 import com.tg.rpc.core.config.ClientProperty;
@@ -7,6 +8,7 @@ import com.tg.rpc.core.entity.ConfigConstant;
 import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.exception.ClientMissingException;
+import com.tg.rpc.core.exception.ServiceInvokeTimeOutException;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.channel.ClientChannelHandler;
@@ -60,7 +62,7 @@ public class Client {
     private EventLoopGroup group;
     private Bootstrap bootstrap;
 
-    //TODO 多个client 不是全局唯一的
+    //TODO 改造id生成器
     private AtomicLong requestId = new AtomicLong(100000);
 
     public Client() {
@@ -307,28 +309,23 @@ public class Client {
         return channelPoolWrappers.get(i);
     }
 
-    public Response sendRequest(Method method, Object[] args, Class clazz) throws Exception {
-        Request request = new Request(clazz, method.getName(), method.getParameterTypes(), args);
+    public Response sendRequest(Method method, Object[] args) throws Exception {
+        Request request = new Request(method.getDeclaringClass(), method.getName(), method.getParameterTypes(), args);
+        method.getDeclaringClass();
         request.setRequestId(requestId.incrementAndGet());
-        String serviceName = serviceCache.get(clazz.getName());
+        String serviceName = serviceCache.get(method.getDeclaringClass().getName());
         if (StringUtils.isEmpty(serviceName)) {
-            throw new ClientMissingException(String.format("can't get service %s , config it in 'interfaces' properity", clazz.getName()));
+            throw new ClientMissingException(String.format("can't get service %s , config it in 'interfaces' properity", method.getDeclaringClass().getName()));
         }
         ChannelPoolWrapper channelPoolWrapper = selectChannel(serviceName);
-        if (channelPoolWrapper == null) {
-            //TODO 异常日志 + 降级
-        }
+        Validate.notNull(channelPoolWrapper, "channel pool did'n init");
         Channel channel = channelPoolWrapper.getObject();
-        if (channel == null) {
-            //TODO 异常日志 + 降级
-            Validate.notNull(channel, "can't get channel from pool");
-        }
+        Validate.notNull(channel, "can't get channel from pool");
         BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
         QueueHolder.put(request.getRequestId(), blockingQueue);
         channel.writeAndFlush(request);
         try {
-            Response response = blockingQueue.poll(requestTimeoutMillis, TimeUnit.MILLISECONDS);
-            return response;
+            return blockingQueue.poll(requestTimeoutMillis, TimeUnit.MILLISECONDS);
         } finally {
             channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());

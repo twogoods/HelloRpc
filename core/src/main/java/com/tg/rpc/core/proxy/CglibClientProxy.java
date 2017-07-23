@@ -22,7 +22,7 @@ public class CglibClientProxy extends AbstractClientProxy {
         enhancer.setCallback(new MethodInterceptor() {
             @Override
             public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                return interceptor.invoke(method, args, serviceInterface);
+                return interceptor.invoke(method, args);
             }
         });
         return (T) enhancer.create();

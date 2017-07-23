@@ -15,6 +15,7 @@ public class DefaultClientInterceptor implements MethodInterceptor {
 
     private Client client;
 
+
     public DefaultClientInterceptor() {
     }
 
@@ -23,10 +24,12 @@ public class DefaultClientInterceptor implements MethodInterceptor {
     }
 
     @Override
-    public Object invoke(Method method, Object[] args, Class clazz) throws Throwable {
+    public Object invoke(Method method, Object[] args) throws Throwable {
         //TODO client发起的调用，限制调用频率，熔断
         //breaker的配置
-        Response response = client.sendRequest(method, args, clazz);
+
+
+        Response response = client.sendRequest(method, args);
         if (response == null) {
             throw new ServiceInvokeTimeOutException("response timout");
         }

@@ -19,7 +19,7 @@ public class JdkClientProxy extends AbstractClientProxy {
         return (T) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{serviceInterface}, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                return interceptor.invoke(method, args, serviceInterface);
+                return interceptor.invoke(method, args);
             }
         });
     }

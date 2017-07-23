@@ -14,6 +14,7 @@
         <module>example</module>
         <module>consul</module>
         <module>zookeeper</module>
+        <module>breaker</module>
     </modules>
 
     <properties>

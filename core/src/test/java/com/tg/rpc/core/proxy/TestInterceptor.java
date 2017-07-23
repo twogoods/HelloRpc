@@ -8,9 +8,9 @@ import java.util.Arrays;
  */
 public class TestInterceptor implements MethodInterceptor {
     @Override
-    public Object invoke(Method method, Object[] args, Class clazz) throws Throwable {
+    public Object invoke(Method method, Object[] args) throws Throwable {
         System.out.println("method : " + method);
-        System.out.println("class : " + clazz);
+        System.out.println("class : " + method.getDeclaringClass());
         System.out.println("args : " + Arrays.asList(args));
         return "test";
     }
