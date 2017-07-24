@@ -1,10 +1,13 @@
 package com.tg.rpc.breaker.metrics;
 
+import lombok.Getter;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by twogoods on 2017/7/23.
  */
+@Getter
 public class MetricsBucket {
     public final AtomicLong errorCount = new AtomicLong(0);
     public final AtomicLong timeoutCount = new AtomicLong(0);
