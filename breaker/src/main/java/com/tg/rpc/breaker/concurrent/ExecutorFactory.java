@@ -16,9 +16,9 @@ public class ExecutorFactory {
     }
 
     public static ExecutorService newExhaustedThreadPool(int poolSize) {
-        return new ThreadPoolExecutor(poolSize, poolSize >> 1 + poolSize,
+        return new ThreadPoolExecutor(poolSize, (poolSize >> 1) + poolSize,
                 3000L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<Runnable>(poolSize >> 1 + poolSize << 1),
+                new ArrayBlockingQueue<Runnable>(((poolSize >> 1) + (poolSize << 1))),
                 new DefaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy()
         );
     }

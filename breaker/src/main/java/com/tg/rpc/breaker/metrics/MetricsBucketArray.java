@@ -1,6 +1,7 @@
 package com.tg.rpc.breaker.metrics;
 
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Created by twogoods on 2017/7/23.
@@ -11,7 +12,6 @@ public class MetricsBucketArray {
     private int size;
     @Getter
     private MetricSnapshot lastCheck;
-
 
     MetricsBucketArray(int size) {
         this.size = size;
@@ -34,7 +34,7 @@ public class MetricsBucketArray {
             error += bucket.errorCount.get() + bucket.timeoutCount.get();
             circuitBreak += bucket.breakerRejcetCount.get();
         }
-        currentIndex++;
+        currentIndex = ++currentIndex >= buckets.length ? 0 : currentIndex;
         buckets[currentIndex] = new MetricsBucket();
         MetricSnapshot check = new MetricSnapshot();
         check.error = error;
@@ -50,6 +50,7 @@ public class MetricsBucketArray {
 
 
     @Getter
+    @ToString
     class MetricSnapshot {
         private long total;
         private long error;

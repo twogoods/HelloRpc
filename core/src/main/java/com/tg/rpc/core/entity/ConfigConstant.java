@@ -20,7 +20,7 @@ public class ConfigConstant {
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 9001;
     public static final int DEFAULT_MAXCAPACITY = 8;
-    public static final int DEFAULT_REQUESTIMEOUTMILLIS = 8000;
+    public static final int DEFAULT_REQUESTIMEOUTMILLIS = 3000;
 
     public static final int DEFAULT_POOL_MAXTOTAL = 20;
     public static final int DEFAULT_POOL_MAXIDLE = 16;

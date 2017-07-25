@@ -28,6 +28,7 @@ public class ClientBootstrap {
                 .requestTimeoutMillis(3500)
                 .connectionMaxTotal(10)
                 .connectionMaxIdle(6)
+                .enableBreaker()
                 .client(clientA)
                 .client(clientB)
                 .build();

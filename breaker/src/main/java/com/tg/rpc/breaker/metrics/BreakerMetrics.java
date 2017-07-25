@@ -1,25 +1,32 @@
 package com.tg.rpc.breaker.metrics;
 
+import com.tg.rpc.breaker.Breaker;
 import com.tg.rpc.breaker.BreakerProperty;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by twogoods on 2017/7/23.
  */
 public class BreakerMetrics {
+    private static final Logger log = LoggerFactory.getLogger(BreakerMetrics.class);
     @Getter
     private MetricsBucketArray metrics;
     @Getter
     private volatile boolean open = false;
     private volatile boolean testPhase = false;
+    private Method metricsMethod;
     private BreakerProperty breakerProperty;
     private AtomicLong lastSingleTestTime = new AtomicLong();
 
     public void check() {
         MetricsBucketArray.MetricSnapshot snapshot = metrics.calculate();
-
+        System.out.println(snapshot);
+        log.debug("calculate {}.{} metrics: ", metricsMethod.getDeclaringClass().getName(), metricsMethod.getName(), snapshot.toString());
         if (open && (snapshot.getTotal()) < 1) {
             //统计的时间窗口期内没有请求进来，关闭熔断
             open = false;
@@ -28,7 +35,6 @@ public class BreakerMetrics {
         if (open) {
             return;
         }
-
         if (snapshot.getTotal() > breakerProperty.getRequestCountThreshold()) {
             if (((float) snapshot.getError()) / ((float) snapshot.getTotal()) > breakerProperty.getErrorPercentageThreshold()) {
                 open = true;
@@ -64,8 +70,9 @@ public class BreakerMetrics {
         }
     }
 
-    public BreakerMetrics(BreakerProperty breakerProperty) {
+    public BreakerMetrics(Method metricsMethod, BreakerProperty breakerProperty) {
         this.breakerProperty = breakerProperty;
+        this.metricsMethod = metricsMethod;
         metrics = new MetricsBucketArray(breakerProperty.getBucketNum());
     }
 

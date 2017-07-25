@@ -1,6 +1,7 @@
 package com.tg.rpc.core.bootstrap;
 
 import com.tg.rpc.breaker.Breaker;
+import com.tg.rpc.breaker.BreakerProperty;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
 import com.tg.rpc.core.config.ClientProperty;
@@ -52,12 +53,14 @@ public class Client {
     private int maxIdle;
     private int minIdle;
     private int borrowMaxWaitMillis;
+    private boolean breakerable;
     private List<ClientProperty> clients = new ArrayList<>();
 
     private ServiceDiscovery serviceDiscovery;
 
     private Map<String, CopyOnWriteArrayList<ChannelPoolWrapper>> clientPools = new HashMap<>();
     private Map<String, String> serviceCache = new HashMap<>();
+    private Breaker breaker;
 
     private EventLoopGroup group;
     private Bootstrap bootstrap;
@@ -83,6 +86,7 @@ public class Client {
         private int maxIdle = ConfigConstant.DEFAULT_POOL_MAXIDLE;
         private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
         private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
+        private boolean breakerable = false;
         private List<ClientProperty> clients = new ArrayList<>();
 
         public Client.Builder host(String host) {
@@ -140,6 +144,11 @@ public class Client {
             return this;
         }
 
+        public Client.Builder enableBreaker() {
+            this.breakerable = true;
+            return this;
+        }
+
         public Client build() {
             Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
             Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
@@ -163,6 +172,7 @@ public class Client {
             client.borrowMaxWaitMillis = this.borrowMaxWaitMillis;
             client.serviceDiscovery = this.serviceDiscovery;
             client.clients = this.clients;
+            client.breakerable = this.breakerable;
             client.preInit();
             client.init();
             return client;
@@ -170,7 +180,7 @@ public class Client {
     }
 
     public void preInit() {
-        //TODO NioEventLoopGroup里线程复用后设置合适的线程数.默认是cpu数的2倍,根据maxTotal的值适当选取
+        //NioEventLoopGroup里线程复用后设置合适的线程数.默认是cpu数的2倍,即认为一个线程一半时间在做io
         group = new NioEventLoopGroup();
         bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
@@ -221,6 +231,13 @@ public class Client {
         log.info("Registry mode! {} discover services done.", serviceDiscovery.getClass().getSimpleName());
     }
 
+    private void createBraker() {
+        BreakerProperty breakerProperty = new BreakerProperty();
+        clients.forEach(clientProperty -> {
+            breakerProperty.addClass(clientProperty.getInterfaces());
+        });
+        breaker = new Breaker(breakerProperty);
+    }
 
     private void parseClientProperty(ClientProperty clientProperty) {
         clientProperty.getInterfaces().forEach(iface -> serviceCache.put(iface, clientProperty.getServiceName()));
@@ -231,6 +248,9 @@ public class Client {
             clientPools.put(clientProperty.getServiceName(), new CopyOnWriteArrayList<>());
             parseClientProperty(clientProperty);
         });
+        if (breakerable) {
+            createBraker();
+        }
     }
 
     private void initChannelInDefaultMode() {
@@ -309,13 +329,11 @@ public class Client {
         return channelPoolWrappers.get(i);
     }
 
-    public Response sendRequest(Method method, Object[] args) throws Exception {
-        Request request = new Request(method.getDeclaringClass(), method.getName(), method.getParameterTypes(), args);
-        method.getDeclaringClass();
+    public Response sendRequest(Request request) throws Exception {
         request.setRequestId(requestId.incrementAndGet());
-        String serviceName = serviceCache.get(method.getDeclaringClass().getName());
+        String serviceName = serviceCache.get(request.getClazz().getName());
         if (StringUtils.isEmpty(serviceName)) {
-            throw new ClientMissingException(String.format("can't get service %s , config it in 'interfaces' properity", method.getDeclaringClass().getName()));
+            throw new ClientMissingException(String.format("can't get service %s , config it in 'interfaces' properity", request.getClazz().getName()));
         }
         ChannelPoolWrapper channelPoolWrapper = selectChannel(serviceName);
         Validate.notNull(channelPoolWrapper, "channel pool did'n init");
@@ -325,7 +343,7 @@ public class Client {
         QueueHolder.put(request.getRequestId(), blockingQueue);
         channel.writeAndFlush(request);
         try {
-            return blockingQueue.poll(requestTimeoutMillis, TimeUnit.MILLISECONDS);
+            return blockingQueue.poll(requestTimeoutMillis << 1, TimeUnit.MILLISECONDS);
         } finally {
             channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());

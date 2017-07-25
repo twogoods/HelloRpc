@@ -27,8 +27,9 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Request request) throws Exception {
+        long start = System.currentTimeMillis();
         Response response = responseHandler.handle(request);
-        log.debug("server get request:{}, return response:{}", request, response);
+        log.debug("cost : {} ms, server get request:{}, return response:{}", (System.currentTimeMillis() - start), request, response);
         channelHandlerContext.pipeline().writeAndFlush(response);
     }
 }

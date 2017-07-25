@@ -1,8 +1,12 @@
 package com.tg.rpc.breaker;
 
+import com.tg.rpc.breaker.Exception.BreakerException;
+import com.tg.rpc.breaker.Exception.RequestExecutionException;
 import com.tg.rpc.breaker.Exception.RequestRejectedException;
+import com.tg.rpc.breaker.Exception.RequestTimeoutException;
 import com.tg.rpc.breaker.concurrent.Executor;
 import com.tg.rpc.breaker.concurrent.ExecutorFactory;
+import com.tg.rpc.breaker.concurrent.task.Task;
 import com.tg.rpc.breaker.metrics.BreakerMetrics;
 import com.tg.rpc.breaker.metrics.BreakerStatus;
 import com.tg.rpc.breaker.strategy.SemaphoreStrategy;
@@ -15,10 +19,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * Created by twogoods on 2017/7/21.
@@ -32,7 +33,18 @@ public class Breaker implements Executor {
     private ExecutorService executorService;
     private ThreadPoolStrategy strategy;
 
-    private void init() throws ClassNotFoundException {
+    public Breaker(BreakerProperty breakerProperty) {
+        this.breakerProperty = breakerProperty;
+        try {
+            initMethodMetrics();
+        } catch (ClassNotFoundException e) {
+            throw new BreakerException(e);
+        }
+        initThreadPool();
+        initCalcThread();
+    }
+
+    private void initMethodMetrics() throws ClassNotFoundException {
         List<String> classes = breakerProperty.getClazz();
         if (classes == null || classes.isEmpty()) {
             return;
@@ -40,7 +52,7 @@ public class Breaker implements Executor {
         for (String classStr : classes) {
             Class clazz = Class.forName(classStr);
             for (Method method : clazz.getMethods()) {
-                metrics.put(method, new BreakerMetrics(breakerProperty));
+                metrics.put(method, new BreakerMetrics(method, breakerProperty));
             }
         }
     }
@@ -50,47 +62,83 @@ public class Breaker implements Executor {
         strategy = new SemaphoreStrategy(breakerProperty.getPoolSize());
     }
 
-    private void initCalaThread() {
+    private void initCalcThread() {
         Runnable calcTask = () -> {
-            metrics.values().forEach(breakerMetrics -> {
-                breakerMetrics.check();
-            });
+            while (true) {
+                try {
+                    Thread.sleep(breakerProperty.getCalculateWindowInMillis());
+                } catch (InterruptedException e) {
+                }
+                metrics.values().forEach(breakerMetrics -> {
+                    breakerMetrics.check();
+                });
+            }
         };
         new Thread(calcTask).run();
     }
 
     @Override
     public Object execute(Task task) throws Throwable {
-        BreakerMetrics breakerMetrics = metrics.get(task.getMethod());
+        BreakerMetrics breakerMetrics = metrics.get(task.getMetricsMethod());
         Validate.notNull(breakerMetrics, "can't get BreakerMetrics for Method: %s ,in class: %s ",
-                task.getMethod().getName(), task.getMethod().getDeclaringClass().getName());
+                task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName());
         if (breakerMetrics.isOpen()) {
+            log.debug(String.format("breaker is open,reject execute task{%s.%s()}",
+                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
             breakerMetrics.increment(BreakerStatus.BREAKER_REJECT);
             if (task.supportFallback()) {
                 return task.callFallback();
             } else {
                 throw new RequestRejectedException(String.format("circuit-breaker is open! method : %s in %s can't fallback",
-                        task.getMethod().getName(), task.getMethod().getDeclaringClass().getName()));
+                        task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName()));
             }
         }
         if (strategy.isBusy()) {
+            log.debug(String.format("no thread to execute task{ %s.%s() }",
+                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
             if (task.supportFallback()) {
                 return task.callFallback();
             } else {
                 throw new RequestRejectedException(String.format("method : %s in %s can't fallback",
-                        task.getMethod().getName(), task.getMethod().getDeclaringClass().getName()));
+                        task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName()));
             }
         }
-        Future callres = executorService.submit(task);
+        try {
+            return call(task, breakerMetrics);
+        } finally {
+            strategy.release();
+        }
+    }
+
+    private Object call(Task task, BreakerMetrics breakerMetrics) throws Throwable {
+        Future<Object> callres = executorService.submit(task);
+        if (breakerMetrics.inTestPhase()) {
+            log.debug(String.format("inTestPhase, execute task{ %s.%s() }",
+                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
+        } else {
+            log.debug(String.format("breaker closed, execute task{ %s.%s() }",
+                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
+        }
         try {
             Object result = callres.get(task.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
-            if (breakerMetrics.inTestPhase()) {
-                //如果这次调用是测试服务是否可用的调用，结果写回
-                breakerMetrics.singleTestPass(true);
-            }
-        } catch (TimeoutException e) {
+            setTestPhase(true, breakerMetrics);
+            return result;
+        } catch (InterruptedException | TimeoutException e) {
             breakerMetrics.increment(BreakerStatus.TIMEOUT);
+            setTestPhase(false, breakerMetrics);
+            throw new RequestTimeoutException(e.getCause());
+        } catch (ExecutionException e) {
+            breakerMetrics.increment(BreakerStatus.ERROR);
+            setTestPhase(false, breakerMetrics);
+            throw new RequestExecutionException(e.getCause());
+        } finally {
+            setTestPhase(false, breakerMetrics);
         }
-        return null;
+    }
+
+    private void setTestPhase(boolean flag, BreakerMetrics breakerMetrics) {
+        if (breakerMetrics.inTestPhase()) {
+            breakerMetrics.singleTestPass(flag);
+        }
     }
 }
