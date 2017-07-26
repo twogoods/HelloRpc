@@ -17,8 +17,6 @@ public class RpcClientConfig {
 
     public static final String TGRPC_PREFIX = "tgrpc.client";
 
-    private String host = ConfigConstant.DEFAULT_HOST;
-    private int port = ConfigConstant.DEFAULT_PORT;
     private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
     private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;
 
@@ -26,6 +24,8 @@ public class RpcClientConfig {
     private int maxIdle = ConfigConstant.DEFAULT_POOL_MAXIDLE;
     private int minIdle = ConfigConstant.DEFAULT_POOL_MINIDLE;
     private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
+
+    private boolean breakerable = ConfigConstant.BREAKERABLE;
 
     private Registry registery = Registry.DEFAULT;
     //--------consul---------

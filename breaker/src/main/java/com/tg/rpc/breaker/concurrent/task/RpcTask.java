@@ -9,55 +9,18 @@ import java.lang.reflect.Method;
 /**
  * Created by twogoods on 2017/7/25.
  */
-public class RpcTask implements Task {
+public class RpcTask extends AbstractTask {
 
     private Method warpMethod;
-    private Object[] args;
-    private Object obj;
-    private Method metricsMethod;
-    private Fallback fallback;
-    private long timeoutInMillis = 3000l;
 
-    public RpcTask(Method warpMethod, Object[] args, Object obj, Method metricsMethod) {
+    public RpcTask(Method metricsMethod, Object[] args, Object obj, Method warpMethod) {
+        super(metricsMethod, args, obj);
         this.warpMethod = warpMethod;
-        this.args = args;
-        this.obj = obj;
-        this.metricsMethod = metricsMethod;
-        fallback = new Fallback(metricsMethod);
     }
 
-    public RpcTask(Method warpMethod, Object[] args, Object obj, Method metricsMethod, long timeoutInMillis) {
+    public RpcTask(Method metricsMethod, Object[] args, Object obj, long timeoutInMillis, Method warpMethod) {
+        super(metricsMethod, args, obj, timeoutInMillis);
         this.warpMethod = warpMethod;
-        this.args = args;
-        this.obj = obj;
-        this.metricsMethod = metricsMethod;
-        this.timeoutInMillis = timeoutInMillis;
-        fallback = new Fallback(metricsMethod);
-    }
-
-    @Override
-    public boolean supportFallback() {
-        return fallback.supportFallback();
-    }
-
-    @Override
-    public Object callFallback() throws Throwable {
-        return fallback.callFallback(args);
-    }
-
-    @Override
-    public Method getMetricsMethod() {
-        return metricsMethod;
-    }
-
-    @Override
-    public Object[] getCallArgs() {
-        return args;
-    }
-
-    @Override
-    public long getTimeoutInMillis() {
-        return timeoutInMillis;
     }
 
     @Override

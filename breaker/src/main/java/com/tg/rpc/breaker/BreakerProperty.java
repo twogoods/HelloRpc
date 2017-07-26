@@ -10,7 +10,7 @@ import java.util.List;
  */
 @Data
 public class BreakerProperty {
-    private int poolSize = 10;
+    private int poolSize = Runtime.getRuntime().availableProcessors() * 2;
     private List<String> clazz = new ArrayList<>();
     private long calculateWindowInMillis = 3000l;
     private int bucketNum = 10;

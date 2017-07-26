@@ -1,6 +1,5 @@
 tgrpc:
     server:
-        host: 127.0.0.1
         port: 9001
         serviceName: testService
         serviceId: dev
@@ -19,7 +18,7 @@ tgrpc:
         registery: consul
         consulHost: 127.0.0.1
         consulPort: 8500
-        breaker: true
+        breakerable: true
         maxCapacity: 3
         maxTotal: 3
         maxIdle: 3
@@ -32,11 +31,5 @@ tgrpc:
                     - com.tg.rpc.example.service.EchoService
                     - com.tg.rpc.example.service.TestService
               providerList: 127.0.0.1:8080
-            - serviceName: testService
-                            requestTimeoutMillis: 2000
-                            interfaces:
-                                  - com.tg.rpc.example.service.EchoService
-                                  - com.tg.rpc.example.service.TestService
-                            providerList: 127.0.0.1:8080
 
 

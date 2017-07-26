@@ -23,14 +23,15 @@ public class MetricsBucketArray {
         this.lastCheck = new MetricSnapshot();
     }
 
-
     public MetricSnapshot calculate() {
         long total = 0;
+        long success = 0;
         long error = 0;
         long circuitBreak = 0;
 
         for (MetricsBucket bucket : buckets) {
             total += bucket.errorCount.get() + bucket.timeoutCount.get() + bucket.successCount.get() + bucket.breakerRejcetCount.get();
+            success += bucket.successCount.get();
             error += bucket.errorCount.get() + bucket.timeoutCount.get();
             circuitBreak += bucket.breakerRejcetCount.get();
         }
@@ -38,6 +39,7 @@ public class MetricsBucketArray {
         buckets[currentIndex] = new MetricsBucket();
         MetricSnapshot check = new MetricSnapshot();
         check.error = error;
+        check.success = success;
         check.total = total;
         check.circuitBreak = circuitBreak;
         lastCheck = check;
@@ -53,6 +55,7 @@ public class MetricsBucketArray {
     @ToString
     class MetricSnapshot {
         private long total;
+        private long success;
         private long error;
         private long circuitBreak;
     }

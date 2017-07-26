@@ -34,18 +34,14 @@ public class DefaultClientInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(Method method, Object[] args) throws Throwable {
-        //TODO client发起的调用，限制调用频率，熔断
         Request request = new Request(method.getDeclaringClass(), method.getName(), method.getParameterTypes(), args);
         Response response;
         if (client.getBreaker() != null) {
-            Object callResult = client.getBreaker().execute(new RpcTask(sendRequestMethod, new Object[]{request}, client, method));
+            Object callResult = client.getBreaker().execute(new RpcTask(method, new Object[]{request}, client, sendRequestMethod));
             response = (Response) callResult;
         } else {
             response = client.sendRequest(request);
         }
-//        if (response == null) {
-//            throw new ServiceInvokeTimeOutException("response timout");
-//        }
         if (response.getCode() != ResponseStatus.SUCCESS.getCode()) {
             throw new ServiceInvokeException(String.format("server return code:%d ,msg:%s", response.getCode(), response.getMsg()));
         }

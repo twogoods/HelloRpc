@@ -60,14 +60,13 @@ public class RpcClientAutoConfiguration {
     }
 
     private Client clientWithoutregistry() {
-        return new Client.Builder().host(rpcClientConfig.getHost())
-                .port(rpcClientConfig.getPort())
-                .maxCapacity(rpcClientConfig.getMaxCapacity())
+        return new Client.Builder().maxCapacity(rpcClientConfig.getMaxCapacity())
                 .requestTimeoutMillis(rpcClientConfig.getRequestTimeoutMillis())
                 .connectionMaxTotal(rpcClientConfig.getMaxTotal())
                 .connectionMaxIdle(rpcClientConfig.getMaxIdle())
                 .connectionMinIdle(rpcClientConfig.getMinIdle())
                 .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .breakerable(rpcClientConfig.isBreakerable())
                 .clients(rpcClientConfig.getClients())
                 .build();
     }
@@ -81,6 +80,7 @@ public class RpcClientAutoConfiguration {
                 .connectionMaxIdle(rpcClientConfig.getMaxIdle())
                 .connectionMinIdle(rpcClientConfig.getMinIdle())
                 .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .breakerable(rpcClientConfig.isBreakerable())
                 .clients(rpcClientConfig.getClients())
                 .build();
     }
@@ -94,6 +94,7 @@ public class RpcClientAutoConfiguration {
                 .connectionMaxIdle(rpcClientConfig.getMaxIdle())
                 .connectionMinIdle(rpcClientConfig.getMinIdle())
                 .connectionBorrowMaxWaitMillis(rpcClientConfig.getBorrowMaxWaitMillis())
+                .breakerable(rpcClientConfig.isBreakerable())
                 .clients(rpcClientConfig.getClients())
                 .build();
     }

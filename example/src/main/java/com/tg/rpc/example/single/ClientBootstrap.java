@@ -22,8 +22,7 @@ public class ClientBootstrap {
         clientB.serviceName("B")
                 .provider("127.0.0.1:9001")
                 .interfaces("com.tg.rpc.example.service.TestService");
-        Client client = new Client.Builder().host("127.0.0.1")
-                .port(9001)
+        Client client = new Client.Builder()
                 .maxCapacity(3)
                 .requestTimeoutMillis(3500)
                 .connectionMaxTotal(10)

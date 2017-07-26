@@ -24,7 +24,7 @@ import java.util.concurrent.*;
 /**
  * Created by twogoods on 2017/7/21.
  * 规则：请求数大于某个阈值并且错误率超过50%触发熔断
- * 熔断后，每10秒过一个请求
+ * 熔断后，每20秒过一个请求测试后端是否
  */
 public class Breaker implements Executor {
     private static final Logger log = LoggerFactory.getLogger(Breaker.class);
@@ -35,6 +35,10 @@ public class Breaker implements Executor {
 
     public Breaker(BreakerProperty breakerProperty) {
         this.breakerProperty = breakerProperty;
+        init();
+    }
+
+    private void init() {
         try {
             initMethodMetrics();
         } catch (ClassNotFoundException e) {
@@ -74,7 +78,7 @@ public class Breaker implements Executor {
                 });
             }
         };
-        new Thread(calcTask).run();
+        new Thread(calcTask).start();
     }
 
     @Override
@@ -83,7 +87,7 @@ public class Breaker implements Executor {
         Validate.notNull(breakerMetrics, "can't get BreakerMetrics for Method: %s ,in class: %s ",
                 task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName());
         if (breakerMetrics.isOpen()) {
-            log.debug(String.format("breaker is open,reject execute task{%s.%s()}",
+            log.debug(String.format("breaker is open, reject execute task{%s.%s()}",
                     task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
             breakerMetrics.increment(BreakerStatus.BREAKER_REJECT);
             if (task.supportFallback()) {
@@ -113,14 +117,15 @@ public class Breaker implements Executor {
     private Object call(Task task, BreakerMetrics breakerMetrics) throws Throwable {
         Future<Object> callres = executorService.submit(task);
         if (breakerMetrics.inTestPhase()) {
-            log.debug(String.format("inTestPhase, execute task{ %s.%s() }",
-                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
+            log.debug("inTestPhase, execute task: {}() in {}",
+                    task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName());
         } else {
-            log.debug(String.format("breaker closed, execute task{ %s.%s() }",
-                    task.getMetricsMethod().getDeclaringClass().getName(), task.getMetricsMethod().getName()));
+            log.debug("breaker closed, execute task: {}() in {}",
+                    task.getMetricsMethod().getName(), task.getMetricsMethod().getDeclaringClass().getName());
         }
         try {
             Object result = callres.get(task.getTimeoutInMillis(), TimeUnit.MILLISECONDS);
+            breakerMetrics.increment(BreakerStatus.SUCCESS);
             setTestPhase(true, breakerMetrics);
             return result;
         } catch (InterruptedException | TimeoutException e) {
@@ -138,6 +143,7 @@ public class Breaker implements Executor {
 
     private void setTestPhase(boolean flag, BreakerMetrics breakerMetrics) {
         if (breakerMetrics.inTestPhase()) {
+            log.debug("inTestPhase, execute task {}", flag ? "success!" : "fail!");
             breakerMetrics.singleTestPass(flag);
         }
     }

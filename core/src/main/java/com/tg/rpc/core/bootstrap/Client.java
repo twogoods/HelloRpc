@@ -76,8 +76,6 @@ public class Client {
     }
 
     public static class Builder {
-        private String host = ConfigConstant.DEFAULT_HOST;
-        private int port = ConfigConstant.DEFAULT_PORT;
         private ServiceDiscovery serviceDiscovery;
         private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
         private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;
@@ -88,16 +86,6 @@ public class Client {
         private int borrowMaxWaitMillis = ConfigConstant.DEFAULT_POOL_BORROWMAXWAITMILLIS;
         private boolean breakerable = false;
         private List<ClientProperty> clients = new ArrayList<>();
-
-        public Client.Builder host(String host) {
-            this.host = host;
-            return this;
-        }
-
-        public Client.Builder port(int port) {
-            this.port = port;
-            return this;
-        }
 
         public Client.Builder maxCapacity(int maxCapacity) {
             this.maxCapacity = maxCapacity;
@@ -149,6 +137,11 @@ public class Client {
             return this;
         }
 
+        public Client.Builder breakerable(boolean flag) {
+            this.breakerable = flag;
+            return this;
+        }
+
         public Client build() {
             Validate.isTrue(maxCapacity > 0, "maxCapacity must bigger than zero, maxCapacity:%d", maxCapacity);
             Validate.isTrue(requestTimeoutMillis > 0, "maxCapacity must bigger than zero, maxCapacity:%d", requestTimeoutMillis);
@@ -157,13 +150,7 @@ public class Client {
             Validate.isTrue(minIdle >= 0, "minIdle can't be negative, maxCapacity:%d", minIdle);
             Validate.isTrue(borrowMaxWaitMillis > 0, "borrowMaxWaitMillis must bigger than zero, maxCapacity:%d", borrowMaxWaitMillis);
 
-            Client client;
-            if (StringUtils.isEmpty(host)) {
-                Validate.notNull(serviceDiscovery, "no host and port, so serviceDiscovery can't be null");
-                client = new Client(serviceDiscovery);
-            } else {
-                client = new Client();
-            }
+            Client client = new Client();
             client.maxCapacity = this.maxCapacity;
             client.requestTimeoutMillis = this.requestTimeoutMillis;
             client.maxTotal = this.maxTotal;

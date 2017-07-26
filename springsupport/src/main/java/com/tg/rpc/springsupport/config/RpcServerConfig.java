@@ -16,7 +16,6 @@ public class RpcServerConfig {
 
     public static final String TGRPC_PREFIX = "tgrpc.server";
 
-    private String host = ConfigConstant.DEFAULT_HOST;
     private int port = ConfigConstant.DEFAULT_PORT;
     private int maxCapacity = ConfigConstant.DEFAULT_MAXCAPACITY;
     private int requestTimeoutMillis = ConfigConstant.DEFAULT_REQUESTIMEOUTMILLIS;

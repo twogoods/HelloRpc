@@ -2,6 +2,8 @@ package com.tg.rpc.breaker;
 
 import com.tg.rpc.breaker.concurrent.task.CommonTask;
 
+import java.lang.reflect.Method;
+
 /**
  * Created by twogoods on 2017/7/25.
  */
@@ -9,11 +11,20 @@ public class BreakerTest {
     public static void main(String[] args) throws Throwable {
         BreakerProperty breakerProperty = new BreakerProperty().addClass("com.tg.rpc.breaker.TestServiceIface");
         Breaker breaker = new Breaker(breakerProperty);
-        CommonTask task = new CommonTask(TestServiceIface.class.getMethod("test", String.class, int.class), new Object[]{"twogoods", 3}, new TestServiceIfaceImpl());
-        System.out.println(breaker.execute(task));
-        for (int i = 0; i < 100; i++) {
-            Thread.sleep(1000l);
-            breaker.execute(task);
+        Method metricsMethod = TestServiceIface.class.getMethod("test", String.class, int.class);
+        Object obj = new TestServiceIfaceImpl();
+        for (int i = 0; i < 1000000; i++) {
+            CommonTask task;
+            if (i > 300) {
+                task = new CommonTask(metricsMethod, new Object[]{"twogoods", 2}, obj, 90l);
+            } else {
+                task = new CommonTask(metricsMethod, new Object[]{"twogoods", i % 3}, obj, 90l);
+            }
+            Thread.sleep(90L);
+            try {
+                breaker.execute(task);
+            } catch (Exception e) {
+            }
         }
     }
 }

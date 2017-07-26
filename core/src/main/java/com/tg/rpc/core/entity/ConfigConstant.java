@@ -16,6 +16,7 @@ public class ConfigConstant {
     public static final int DEFAULT_ZOOKEEPER_PORT = 2181;
     public static final String DEFAULT_ZOOKEEPER_SERVICE_PATH = "/tgrpc/services";
 
+    public static final boolean BREAKERABLE = false;
 
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 9001;

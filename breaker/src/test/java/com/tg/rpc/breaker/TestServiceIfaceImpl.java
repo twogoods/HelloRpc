@@ -6,14 +6,14 @@ package com.tg.rpc.breaker;
 public class TestServiceIfaceImpl implements TestServiceIface {
     @Override
     public String test(String str, int flag) {
-        if(flag==1){
+        if (flag == 0) {
             try {
-                Thread.sleep(10000L);
+                Thread.sleep(100L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             return str;
-        }else if(flag==2){
+        } else if (flag == 1) {
             throw new RuntimeException("error");
         }
         return str;
