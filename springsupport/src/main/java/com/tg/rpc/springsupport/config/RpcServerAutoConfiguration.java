@@ -32,10 +32,8 @@ public class RpcServerAutoConfiguration {
     public Server server() {
         Server server;
         if (Registry.DEFAULT == rpcServerConfig.getRegistery()) {
-            System.out.println("in default " + rpcServerConfig);
             server = serverWithoutregistry();
         } else if (Registry.CONSUL == rpcServerConfig.getRegistery()) {
-            System.out.println("in consul " + rpcServerConfig);
             server = serverWithConsul();
         } else if (Registry.ZOOKEEPER == rpcServerConfig.getRegistery()) {
             server = serverWithZookeeper();

@@ -5,6 +5,11 @@ package com.tg.rpc.breaker;
  */
 public class TestServiceIfaceImpl implements TestServiceIface {
     @Override
+    public String echo(String str) {
+        return "hello " + str;
+    }
+
+    @Override
     public String test(String str, int flag) {
         if (flag == 0) {
             try {
@@ -16,6 +21,6 @@ public class TestServiceIfaceImpl implements TestServiceIface {
         } else if (flag == 1) {
             throw new RuntimeException("error");
         }
-        return str;
+        return "hello " + str;
     }
 }

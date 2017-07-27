@@ -24,6 +24,7 @@ public class ClientBootstrap {
                 .serviceDiscovery(serviceDiscovery)
                 .connectionMinIdle(1)
                 .maxCapacity(3)
+                .enableBreaker()
                 .client(clientA)
                 .build();
         DefaultClientInterceptor interceptor = new DefaultClientInterceptor(client);

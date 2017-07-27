@@ -1,16 +1,13 @@
 package com.tg.rpc.breaker.concurrent.task;
 
-
-import com.tg.rpc.breaker.Exception.BreakerException;
-import com.tg.rpc.breaker.Fallback.Fallback;
+import com.tg.rpc.breaker.exception.BreakerException;
 
 import java.lang.reflect.Method;
 
 /**
  * Created by twogoods on 2017/7/25.
  */
-public class RpcTask extends AbstractTask {
-
+public class RpcTask extends ReflectTask {
     private Method warpMethod;
 
     public RpcTask(Method metricsMethod, Object[] args, Object obj, Method warpMethod) {

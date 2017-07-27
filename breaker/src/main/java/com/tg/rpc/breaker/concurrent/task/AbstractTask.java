@@ -1,7 +1,6 @@
 package com.tg.rpc.breaker.concurrent.task;
 
-import com.tg.rpc.breaker.Exception.BreakerException;
-import com.tg.rpc.breaker.Fallback.Fallback;
+import com.tg.rpc.breaker.fallback.Fallback;
 
 import java.lang.reflect.Method;
 
@@ -11,21 +10,17 @@ import java.lang.reflect.Method;
 public abstract class AbstractTask implements Task {
     protected Method metricsMethod;
     protected Object[] args;
-    protected Object obj;
     protected Fallback fallback;
-    protected long timeoutInMillis = 3000l;
+    protected long timeoutInMillis = 5000l;
 
-    public AbstractTask(Method metricsMethod, Object[] args, Object obj) {
+    public AbstractTask(Method metricsMethod, Object[] args) {
         this.metricsMethod = metricsMethod;
         this.args = args;
-        this.obj = obj;
     }
 
-
-    public AbstractTask(Method metricsMethod, Object[] args, Object obj, long timeoutInMillis) {
+    public AbstractTask(Method metricsMethod, Object[] args, long timeoutInMillis) {
         this.metricsMethod = metricsMethod;
         this.args = args;
-        this.obj = obj;
         this.timeoutInMillis = timeoutInMillis;
     }
 
@@ -44,7 +39,6 @@ public abstract class AbstractTask implements Task {
         return metricsMethod;
     }
 
-    @Override
     public Object[] getCallArgs() {
         return args;
     }
@@ -54,11 +48,5 @@ public abstract class AbstractTask implements Task {
         return timeoutInMillis;
     }
 
-    @Override
-    public Object call() throws Exception {
-        if (obj == null) {
-            throw new BreakerException("class instance is null");
-        }
-        return metricsMethod.invoke(obj, args);
-    }
+
 }

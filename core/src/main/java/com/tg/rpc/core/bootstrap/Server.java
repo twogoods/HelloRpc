@@ -2,6 +2,7 @@ package com.tg.rpc.core.bootstrap;
 
 import com.tg.rpc.core.codec.ProtocolEncoder;
 import com.tg.rpc.core.entity.ConfigConstant;
+import com.tg.rpc.core.exception.ServiceRegisterException;
 import com.tg.rpc.core.handler.channel.ServerChannelHandler;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.entity.ServiceHolder;
@@ -132,6 +133,7 @@ public class Server {
             });
         } catch (Exception e) {
             log.error("server start failed!", e);
+            System.exit(-1);
         }
     }
 
@@ -146,7 +148,7 @@ public class Server {
             serviceRegistry.register(service);
             log.info("Server register success.");
         } catch (Exception e) {
-            log.error("register service {} error! {}", service, e);
+            throw new ServiceRegisterException(String.format("register service %s error!", service.toString()), e);
         }
     }
 

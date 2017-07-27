@@ -10,6 +10,7 @@ import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
 import com.tg.rpc.core.exception.ClientMissingException;
 import com.tg.rpc.core.exception.ServiceInvokeTimeOutException;
+import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.channel.ClientChannelHandler;
@@ -161,7 +162,12 @@ public class Client {
             client.clients = this.clients;
             client.breakerable = this.breakerable;
             client.preInit();
-            client.init();
+            try {
+                client.init();
+            } catch (Exception e) {
+                log.error("build client error!", e);
+                System.exit(-1);
+            }
             return client;
         }
     }
@@ -208,7 +214,7 @@ public class Client {
         return null;
     }
 
-    private void init() {
+    private void init() throws ValidateException {
         initPoolMapAndParse();
         if (serviceDiscovery == null) {
             initChannelInDefaultMode();
@@ -240,10 +246,10 @@ public class Client {
         }
     }
 
-    private void initChannelInDefaultMode() {
-        clients.forEach(clientProperty -> {
+    private void initChannelInDefaultMode() throws ValidateException {
+        for (ClientProperty clientProperty : clients) {
             addChannel(clientProperty);
-        });
+        }
     }
 
     private void initChannelInRegistryMode() {
@@ -252,7 +258,7 @@ public class Client {
             try {
                 serviceList = serviceDiscovery.discover(clientProperty.getServiceName());
             } catch (Exception e) {
-                log.error("discovery service error:{}", e);
+                log.error("discovery service: {} error! {}", clientProperty.getServiceName(), e);
                 continue;
             }
             if (serviceList.size() == 0) {
@@ -260,25 +266,32 @@ public class Client {
                 continue;
             }
             serviceList.forEach(service -> addChannel(service));
-            final Comparable<ChannelPoolWrapper, Service> comparable = (ChannelPoolWrapper channelPoolWrapper, Service service)
-                    -> channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
             try {
-                serviceDiscovery.addListener(clientProperty.getServiceName(), services -> {
-                    List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(clientProperty.getServiceName());
-                    log.debug("execute listener :cache:{}, nowservices:{}", clientPools.get(clientProperty.getServiceName()), services);
-                    List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
-                    List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
-                    log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
-                    for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
-                        removeChannel(clientProperty.getServiceName(), channelPoolWrapper);
-                    }
-                    for (Service service : shouldAdded) {
-                        addChannel(service);
-                    }
-                });
+                serviceDiscovery.addListener(clientProperty.getServiceName(), services -> refreshChannel(clientProperty, services));
             } catch (Exception e) {
                 log.error("serviceDiscovery set listener error:{}", e);
             }
+        }
+    }
+
+    private static final Comparable<ChannelPoolWrapper, Service> comparable = (ChannelPoolWrapper channelPoolWrapper, Service service)
+            -> channelPoolWrapper.getHost().equals(service.getAddress()) && channelPoolWrapper.getPort() == service.getPort();
+
+    private void refreshChannel(ClientProperty clientProperty, List<Service> services) {
+        List<ChannelPoolWrapper> channelPoolWrappers = clientPools.get(clientProperty.getServiceName());
+        log.debug("execute listener :cache:{}, nowservices:{}", clientPools.get(clientProperty.getServiceName()), services);
+        List<ChannelPoolWrapper> shouldRemoved = ServiceFilter.filterRemoved(channelPoolWrappers, services, comparable);
+        List<Service> shouldAdded = ServiceFilter.filterAdded(channelPoolWrappers, services, comparable);
+        doRefresh(clientProperty, shouldRemoved, shouldAdded);
+    }
+
+    private void doRefresh(ClientProperty clientProperty, List<ChannelPoolWrapper> shouldRemoved, List<Service> shouldAdded) {
+        log.debug("listener: shouldRemoved:{}, shouldAdded:{}", shouldRemoved, shouldAdded);
+        for (ChannelPoolWrapper channelPoolWrapper : shouldRemoved) {
+            removeChannel(clientProperty.getServiceName(), channelPoolWrapper);
+        }
+        for (Service service : shouldAdded) {
+            addChannel(service);
         }
     }
 
@@ -288,15 +301,16 @@ public class Client {
 
     private static final String HTTP_PROTOCOL = "http://";
 
-    private void addChannel(ClientProperty clientProperty) {
-        clientProperty.getProviderList().forEach(provider -> {
+    private void addChannel(ClientProperty clientProperty) throws ValidateException {
+        for (String provider : clientProperty.getProviderList()) {
             try {
                 URL providerUrl = new URL(HTTP_PROTOCOL + provider);
                 clientPools.get(clientProperty.getServiceName()).add(new ChannelPoolWrapper(this, providerUrl.getHost(), providerUrl.getPort()));
             } catch (MalformedURLException e) {
                 log.error("providerList parse error, origin content :{}", provider);
+                throw new ValidateException(String.format("providerList parse error, origin content: %s", provider), e);
             }
-        });
+        }
     }
 
     private void removeChannel(String serviceName, ChannelPoolWrapper channelPoolWrapper) {

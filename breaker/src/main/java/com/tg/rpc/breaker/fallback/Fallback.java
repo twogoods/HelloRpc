@@ -1,4 +1,4 @@
-package com.tg.rpc.breaker.Fallback;
+package com.tg.rpc.breaker.fallback;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

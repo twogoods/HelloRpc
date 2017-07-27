@@ -1,4 +1,4 @@
-package com.tg.rpc.breaker.Exception;
+package com.tg.rpc.breaker.exception;
 
 /**
  * Created by twogoods on 2017/7/25.

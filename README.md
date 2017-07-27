@@ -26,8 +26,6 @@ Server:
 
 ```
 //配置:端口号,最大的传输容量(单位M),服务响应的Handle
-Server server = new Server.Builder().port(9001).maxCapacity(3).build();
-
 Server server = new Server.Builder()
              .port(9001)
              .serviceName("test")//服务名，全局唯一
@@ -83,7 +81,7 @@ Client client = new Client.Builder().maxCapacity(3)
 ---
 
 ### 服务注册与发现
-只需在server和client里增加相应的组件即可
+支持Consul和Zookeeper，只需在server和client里增加相应的组件即可
 
 ```
 //server端使用服务注册组件
@@ -212,19 +210,33 @@ public class ClientApplication {
 
 ```
 public interface TestServiceIface {
-    default String test(String str) {
+    default String echo(String str) {
         return str;
     }
 }
 ```
-熔断组件最基本的使用如下：
-
+熔断组件真正执行方法的时候有两种方式
+#### 1、利用反射执行
 ```
 BreakerProperty breakerProperty = new BreakerProperty().addClass("com.tg.rpc.breaker.TestServiceIface");//要监控的类
 Breaker breaker = new Breaker(breakerProperty);
-Method metricsMethod = TestServiceIface.class.getMethod("test", String.class, int.class);//熔断在方法级别
-CommonTask task = new CommonTask(metricsMethod, new Object[]{"twogoods"}, new TestServiceIfaceImpl());
-Object res=breaker.execute(task);
+Method metricsMethod = TestServiceIface.class.getMethod("echo", String.class);//熔断发生在方法级别
+Object obj = new TestServiceIfaceImpl();
+ReflectTask task = new ReflectTask(metricsMethod, new Object[]{"twogoods"}, obj, 100l);
+Object res = breaker.execute(task);
+System.out.println(res);
+```
+#### 2、函数式思想传入具体行为
+```
+BreakerProperty breakerProperty = new BreakerProperty().addClass("com.tg.rpc.breaker.TestServiceIface");
+Breaker breaker = new Breaker(breakerProperty);
+Method metricsMethod = TestServiceIface.class.getMethod("echo", String.class);
+TestServiceIface testServiceIface = new TestServiceIfaceImpl();
+TaskExecuteHook<String, String> taskExecuteHook = s -> testServiceIface.echo(s);//真正的执行行为
+Object res = breaker.execute(new HookTask<>(taskExecuteHook, "twogoods", () -> {
+    return new Object[]{"twogoods"};
+}, metricsMethod));
+System.out.println(res);
 ```
 RPC框架提供了对熔断的支持，默认是关闭熔断的，开启只需修改配置
 
@@ -240,7 +252,7 @@ Client client = new Client.Builder()
 ```
 tgrpc:
     client:
-        breaker: true
+        breakerable: true
 ```
 ---
 更多使用请参考[example](https://github.com/twogoods/HelloRpc/tree/master/example)模块

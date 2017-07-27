@@ -1,7 +1,8 @@
 package com.tg.rpc.core.proxy;
 
-import com.tg.rpc.breaker.Exception.BreakerException;
+import com.tg.rpc.breaker.concurrent.task.HookTask;
 import com.tg.rpc.breaker.concurrent.task.RpcTask;
+import com.tg.rpc.breaker.concurrent.task.TaskExecuteHook;
 import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.entity.Response;
@@ -14,22 +15,12 @@ import java.lang.reflect.Method;
  * Created by twogoods on 17/2/17.
  */
 public class DefaultClientInterceptor implements MethodInterceptor {
-
     private Client client;
-    private Method sendRequestMethod;
-
-    public DefaultClientInterceptor() {
-    }
+    private TaskExecuteHook<Request, Response> taskExecuteHook;
 
     public DefaultClientInterceptor(Client client) {
         this.client = client;
-        if (client.getBreaker() != null) {
-            try {
-                sendRequestMethod = Client.class.getMethod("sendRequest", Request.class);
-            } catch (NoSuchMethodException e) {
-                throw new BreakerException(e);
-            }
-        }
+        taskExecuteHook = request -> client.sendRequest(request);
     }
 
     @Override
@@ -37,7 +28,7 @@ public class DefaultClientInterceptor implements MethodInterceptor {
         Request request = new Request(method.getDeclaringClass(), method.getName(), method.getParameterTypes(), args);
         Response response;
         if (client.getBreaker() != null) {
-            Object callResult = client.getBreaker().execute(new RpcTask(method, new Object[]{request}, client, sendRequestMethod));
+            Object callResult = client.getBreaker().execute(new HookTask<>(taskExecuteHook, request, () -> request.getParams(), method));
             response = (Response) callResult;
         } else {
             response = client.sendRequest(request);

@@ -13,8 +13,6 @@ public interface Task extends Callable<Object> {
 
     Method getMetricsMethod();
 
-    Object[] getCallArgs();
-
     default long getTimeoutInMillis() {
         return 3000l;
     }
