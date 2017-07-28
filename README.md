@@ -232,12 +232,13 @@ BreakerProperty breakerProperty = new BreakerProperty().addClass("com.tg.rpc.bre
 Breaker breaker = new Breaker(breakerProperty);
 Method metricsMethod = TestServiceIface.class.getMethod("echo", String.class);
 TestServiceIface testServiceIface = new TestServiceIfaceImpl();
-TaskExecuteHook<String, String> taskExecuteHook = s -> testServiceIface.echo(s);//真正的执行行为
+TaskExecuteHook<String, String> taskExecuteHook = testServiceIface::echo;//真正的执行行为
 Object res = breaker.execute(new HookTask<>(taskExecuteHook, "twogoods", () -> {
     return new Object[]{"twogoods"};
 }, metricsMethod));
 System.out.println(res);
 ```
+`Functional`的方式现在只支持只有一个参数的方法，它不好灵活的支持多参数，如JDK里的`Consumer`和`BiConsumer`，多一个参数就需要多定义一个接口。
 RPC框架提供了对熔断的支持，默认是关闭熔断的，开启只需修改配置
 
 ```

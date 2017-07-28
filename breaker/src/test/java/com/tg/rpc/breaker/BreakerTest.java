@@ -18,7 +18,7 @@ public class BreakerTest {
     public void testHook() throws Throwable {
         //Hook利用函数式的方式传递实现，方法参数个数上很难实现灵活，Hook方式现在只支持一个参数的方法
         TestServiceIface testServiceIface = new TestServiceIfaceImpl();
-        TaskExecuteHook<String, String> taskExecuteHook = s -> testServiceIface.echo(s);
+        TaskExecuteHook<String, String> taskExecuteHook = testServiceIface::echo;
         Method metricsMethod = TestServiceIface.class.getMethod("echo", String.class);
         Object res = breaker.execute(new HookTask<>(taskExecuteHook, "twogoods", () -> {
             return new Object[]{"twogoods"};

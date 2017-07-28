@@ -1,7 +1,6 @@
 package com.tg.rpc.core.proxy;
 
 import com.tg.rpc.breaker.concurrent.task.HookTask;
-import com.tg.rpc.breaker.concurrent.task.RpcTask;
 import com.tg.rpc.breaker.concurrent.task.TaskExecuteHook;
 import com.tg.rpc.core.bootstrap.Client;
 import com.tg.rpc.core.entity.Request;
@@ -20,7 +19,7 @@ public class DefaultClientInterceptor implements MethodInterceptor {
 
     public DefaultClientInterceptor(Client client) {
         this.client = client;
-        taskExecuteHook = request -> client.sendRequest(request);
+        taskExecuteHook = client::sendRequest;
     }
 
     @Override
@@ -28,7 +27,7 @@ public class DefaultClientInterceptor implements MethodInterceptor {
         Request request = new Request(method.getDeclaringClass(), method.getName(), method.getParameterTypes(), args);
         Response response;
         if (client.getBreaker() != null) {
-            Object callResult = client.getBreaker().execute(new HookTask<>(taskExecuteHook, request, () -> request.getParams(), method));
+            Object callResult = client.getBreaker().execute(new HookTask<>(taskExecuteHook, request, request::getParams, method));
             response = (Response) callResult;
         } else {
             response = client.sendRequest(request);
