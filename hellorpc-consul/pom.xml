@@ -4,16 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hellorpc</artifactId>
-        <groupId>com.tg.rpc</groupId>
+        <groupId>com.github.twogoods</groupId>
         <version>0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>consul</artifactId>
+    <artifactId>hellorpc-consul</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.tg.rpc</groupId>
-            <artifactId>core</artifactId>
+            <groupId>com.github.twogoods</groupId>
+            <artifactId>hellorpc-core</artifactId>
             <version>0.1</version>
         </dependency>
         <dependency>
