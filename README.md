@@ -8,6 +8,15 @@
 - 断路器
 
 ### 简单调用示例
+引入依赖：
+
+```
+<dependency>
+  <groupId>com.github.twogoods</groupId>
+  <artifactId>hellorpc-core</artifactId>
+  <version>0.1</version>
+</dependency>
+```
 定义服务和服务实现
 
 ```
@@ -81,7 +90,22 @@ Client client = new Client.Builder().maxCapacity(3)
 ---
 
 ### 服务注册与发现
-支持Consul和Zookeeper，只需在server和client里增加相应的组件即可
+支持Consul和Zookeeper:
+
+```
+<dependency>
+  <groupId>com.github.twogoods</groupId>
+  <artifactId>hellorpc-consul</artifactId>
+  <version>0.1</version>
+</dependency>
+
+<dependency>
+  <groupId>com.github.twogoods</groupId>
+  <artifactId>hellorpc-zookeeper</artifactId>
+  <version>0.1</version>
+</dependency>
+```
+只需在server和client里增加相应的组件即可
 
 ```
 //server端使用服务注册组件
@@ -112,6 +136,15 @@ ServiceRegistry serviceRegistry = ZookeeperCompentFactory.getRegistry("localhost
 ---
 ### 整合SpringBoot
 #### 服务端配置
+引入对Spring的支持
+
+```
+<dependency>
+  <groupId>com.github.twogoods</groupId>
+  <artifactId>hellorpc-spring</artifactId>
+  <version>0.1</version>
+</dependency>
+```
 使用`@RpcService`注解
 
 ```
