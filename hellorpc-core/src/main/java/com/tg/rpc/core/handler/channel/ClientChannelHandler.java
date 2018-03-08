@@ -1,5 +1,6 @@
 package com.tg.rpc.core.handler.channel;
 
+import com.tg.rpc.core.entity.FutureHolder;
 import com.tg.rpc.core.entity.QueueHolder;
 import com.tg.rpc.core.entity.Response;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 
 /**
@@ -18,14 +21,17 @@ public class ClientChannelHandler extends SimpleChannelInboundHandler<Response> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("error in channel:{} {}",ctx.channel(),cause);
+        log.error("error in channel:{} {}", ctx.channel(), cause);
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Response response) throws Exception {
+        /*
         BlockingQueue<Response> blockingQueue = QueueHolder.get(response.getRequestId());
         if (blockingQueue != null) {
             blockingQueue.put(response);
         }
+        */
+        FutureHolder.get(response.getRequestId()).setData(response);
     }
 }

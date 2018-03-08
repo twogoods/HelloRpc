@@ -5,14 +5,11 @@ import com.tg.rpc.breaker.BreakerProperty;
 import com.tg.rpc.core.codec.ProtocolDecoder;
 import com.tg.rpc.core.codec.ProtocolEncoder;
 import com.tg.rpc.core.config.ClientProperty;
-import com.tg.rpc.core.entity.ConfigConstant;
-import com.tg.rpc.core.entity.QueueHolder;
-import com.tg.rpc.core.entity.Response;
+import com.tg.rpc.core.entity.*;
 import com.tg.rpc.core.exception.ClientMissingException;
 import com.tg.rpc.core.exception.ServiceInvokeTimeOutException;
 import com.tg.rpc.core.exception.ValidateException;
 import com.tg.rpc.core.pool.ChannelPoolWrapper;
-import com.tg.rpc.core.entity.Request;
 import com.tg.rpc.core.handler.channel.ClientChannelHandler;
 import com.tg.rpc.core.servicecenter.*;
 import com.tg.rpc.core.servicecenter.Comparable;
@@ -35,10 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -340,14 +334,29 @@ public class Client {
         Validate.notNull(channelPoolWrapper, "channel pool did'n init");
         Channel channel = channelPoolWrapper.getObject();
         Validate.notNull(channel, "can't get channel from pool");
+        channel.writeAndFlush(request);
+
+        /* 最原始方法
         BlockingQueue<Response> blockingQueue = new ArrayBlockingQueue(1);
         QueueHolder.put(request.getRequestId(), blockingQueue);
-        channel.writeAndFlush(request);
         try {
             return blockingQueue.poll(requestTimeoutMillis << 1, TimeUnit.MILLISECONDS);
         } finally {
             channelPoolWrapper.returnObject(channel);
             QueueHolder.remove(request.getRequestId());
         }
+        */
+
+
+        //自己构造future
+        FutureData<Response> responseFutureData = new FutureData<>();
+        FutureHolder.put(request.getRequestId(), responseFutureData);
+        return responseFutureData.get();
+
+        /* 其实jdk8里已经有了开箱即用的future工具
+        CompletableFuture<Response> response = new CompletableFuture<>();
+        response.complete(new Response);
+        response.get();
+        */
     }
 }
