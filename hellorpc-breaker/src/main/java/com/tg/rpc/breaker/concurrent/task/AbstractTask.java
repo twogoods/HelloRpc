@@ -16,12 +16,14 @@ public abstract class AbstractTask implements Task {
     public AbstractTask(Method metricsMethod, Object[] args) {
         this.metricsMethod = metricsMethod;
         this.args = args;
+        fallback = new Fallback(metricsMethod);
     }
 
     public AbstractTask(Method metricsMethod, Object[] args, long timeoutInMillis) {
         this.metricsMethod = metricsMethod;
         this.args = args;
         this.timeoutInMillis = timeoutInMillis;
+        fallback = new Fallback(metricsMethod);
     }
 
     @Override
